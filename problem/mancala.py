@@ -15,7 +15,7 @@ class Driver:
     def run(self):
         self.fobj = open(self.file, 'r')
         self.method = self.__getObjNum()
-        self.player_turn = (self.__getObjNum()-1) #pl1->id=0, pl2->id=1
+        self.player_turn = self.__getObjNum() #pl1->id=1, pl2->id=2
         self.depth = self.__getObjNum()
         
         #get player 2 state
@@ -32,9 +32,9 @@ class Driver:
         
         #create player objects
         ply1 = game.GamePlayer(param.PLAYER_ID1, ply1_list, ply1_score)
-        self.players[param.PLAYER_ID[1]] = ply1
+        self.players[param.PLAYER_ID1] = ply1
         ply2 = game.GamePlayer(param.PLAYER_ID2, ply2_list, ply2_score)
-        self.players[param.PLAYER_ID[2]] = ply2
+        self.players[param.PLAYER_ID2] = ply2
         
         #create State object
         state = game.GameState(self.players)
@@ -50,14 +50,15 @@ class Driver:
         self.linecount+=1
         return int(line.split()[0])
     
+	#returns the dictionary of pitlists
     def __getPitsDetails(self):
         line = self.fobj.readline()
         self.linecount+=1
         pits = line.split()
         self.pitsCount = len(pits)
-        pit_list = []
+        pit_list = {}
         for i in range(self.pitsCount):
-            pit_list.append(int(pits[i]))
+            pit_list[i+1] = (int(pits[i]))
         return pit_list 
 
 if __name__=="__main__":

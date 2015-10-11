@@ -4,9 +4,5 @@ TASK_OPTION = {
 	'ALPHABETA':3,
 	'COMPETE':4
 }
-PLAYER_ID = {
-	1:0,
-	2:1
-}
 PLAYER_ID1 = 1
 PLAYER_ID2 = 2
