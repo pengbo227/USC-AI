@@ -9,18 +9,18 @@ class Game:
 		self.totalPits = totalPits
 	
 	def play(self):
-		stateObj = self.call_method(self.currentState)
-		
+		pit_id, stateObj = self.call_method(self.currentState)
+		#print output state
 	
 	def call_method(self, stateObj)
 		if self.method == param.TASK_OPTION['GREEDY']:
-			self.nxtGreedyMv(stateObj)
+			return self.nxtGreedyMv(stateObj)
 		elif self.method == param.TASK_OPTION['MINIMAX']:
-			self.nxtMnmxMv(stateObj)
+			return self.nxtMnmxMv(stateObj)
 		elif self.method == param.TASK_OPTION['ALPHABETA']
-			self.nxtABMv(stateObj)
+			return self.nxtABMv(stateObj)
 		else:
-			pass
+			return None
 	
 	def nextState(self, stateObj, play_turn, pitid):	
 		total_pits = stateObj.players[1].pitsCount
@@ -39,13 +39,15 @@ class Game:
 				elif playerId == 2:
 					last_filled_pit = next_pit_id + 1
 		
-			#Now check if there is lone count in last filled pit
-			real_id = playerId-1
-			opp_id = (real_id + 1) % 2
-			if pl_list[real_id][last_filled_pit - 1] == 1:
-				pl_score[real_id]= pl_score[real_id] + pl_list[opp_id][last_filled_pit - 1] + 1
-				pl_list[opp_id][last_filled_pit - 1] = 0
-				pl_list[real_id][last_filled_pit - 1] = 0
+			#Now check if last update was in same half and count ==1
+			if playerId == play_turn:
+				real_id = playerId-1
+				opp_id = (real_id + 1) % 2
+				if pl_list[real_id][last_filled_pit - 1] == 1:
+					pl_score[real_id]= pl_score[real_id] + pl_list[opp_id][last_filled_pit - 1] + 1
+					pl_list[opp_id][last_filled_pit - 1] = 0
+					pl_list[real_id][last_filled_pit - 1] = 0
+					
 		#create new pseudostate and recur
 		#1. Create Player objects
 		pl1 = GamePlayer(param.PLAYER_ID1, pl_list[PLAYER_ID[1]], pl_score[PLAYER_ID[1]])
@@ -57,19 +59,31 @@ class Game:
 		if free_turn:
 			return self.call_method(pseudoState)
 		else
-			return self.evaluate(play_turn, pseudoState)
+			return pseudoState
 	
 	def nxtGreedyMv(self, stateObj):
-		next_move_eval = {}
+		next_pstate = {}
 		for i in range(self.totalPits):
 			pit_id = i+1
-			next_move_eval[pit_id] = 0
-			free_turn, pseudoStateObj = self.nextState(stateObj, self.playTurn, pit_id)
-			if free_turn:
-				next_move_eval[pit_id] = self.nxtGreedyMv(pseudoStateObj)
-			else:
-				next_move_eval[pit_id] = self.evaluate(self.playTurn, pseudoStateObj)
-		
+			next_pseudoState[pit_id] = self.nextState(stateObj, self.playTurn, pit_id)
+		pit_id = self.batch_evaluate(next_pstate)
+		return pit_id, next_pstate[pitid] 
+	
+	def batch_evaluate(self, stateList, play_turn):
+		if play_turn == param.PLAYER_ID1
+			keyList = sorted(StateList)
+		else:
+			keyList = sorted(StateList, reverse=True)
+		max_val = 0
+		max_pid = 0
+		for key in keyList:
+			score = self.evaluate(play_turn, stateList[key])
+			if score > max_val:
+				max_val = score
+				max_pid = key
+		if max_pid == 0:
+			max_pid = keyList[0]
+		return max_pid
 	
 	def nxtMnmxMv(self):
 		pass
@@ -83,7 +97,10 @@ class Game:
 	#for 2 player game it will be playerId - other_playerId
 	def evaluate(self, plyId, pseudoStateObj):
 		players = pseudoStateObj.players
-		othrPlyId = (playerId + 1) % 2 # for 2 players game.
+		if plyId == 1:
+			othrPlyId = 2
+		else:
+			othrPlyId = 1
 		return players[plyId].score - players[othrPlyId].score
 	
 	def distribute(self, pseudoState, play_turn, pitid):
