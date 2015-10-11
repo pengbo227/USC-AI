@@ -31,9 +31,9 @@ class Driver:
         ply1_score = self.__getObjNum()
         
         #create player objects
-        ply1 = game.GamePlayer(0, ply1_list, ply1_score, self.pitsCount)
+        ply1 = game.GamePlayer(0, ply1_list, ply1_score)
         self.players[param.PLAYER_ID[1]] = ply1
-        ply2 = game.GamePlayer(1, ply2_list, ply2_score, self.pitsCount)
+        ply2 = game.GamePlayer(1, ply2_list, ply2_score)
         self.players[param.PLAYER_ID[2]] = ply2
         
         #create State object
@@ -42,7 +42,7 @@ class Driver:
         #play On
         gameObj = game.Game(state, self.method, self.player_turn, self.depth)
         gameObj.play();
-		self.fobj.close()
+        self.fobj.close()
         
         
     def __getObjNum(self):
