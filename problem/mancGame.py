@@ -11,6 +11,27 @@ class Game:
 	def play(self):
 		pit_id, stateObj = self.call_method(self.currentState)
 		#print output state
+		fobj = open('next_state.txt','w')
+		line = self.__output_pits_state(stateObj, param.PLAYER_ID2)
+		fobj.write(line + '\n')
+		line = self.__output_pits_state(stateObj, param.PLAYER_ID1)
+		fobj.write(line + '\n')
+		self.__output_score(fobj, stateObj, param.PLAYER_ID2)
+		self.__output_score(fobj, stateObj, param.PLAYER_ID1)
+		
+	def __output_score(self, fobj, state, playerId)
+		score = state.players[param.PLAYER_ID2].score
+		line = str(score) + '\n'
+		fobj.write(line)
+		
+		
+	def __output_pits_state(self, state, playerId):
+		line = ''
+		pitsList = state.players[playerId-1].pitsList
+		for elem in pitsList:
+			line=line+str(elem) + ' '
+		line.strip()
+		
 	
 	def call_method(self, stateObj)
 		if self.method == param.TASK_OPTION['GREEDY']:
