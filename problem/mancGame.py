@@ -1,5 +1,6 @@
 import mancParam as param
 import copy
+import mancMethods as method
 
 class Game:
     def __init__(self, state, method, player_turn, depth, totalPits):
@@ -7,6 +8,7 @@ class Game:
         self.method = method
         self.playTurn = player_turn
         self.totalPits = totalPits
+        self.maxDepth = depth
     
     def play(self):
         pit_id, stateObj = self.call_method(self.currentState)
@@ -131,8 +133,42 @@ class Game:
             max_pid = keyList[0]
         return max_pid
     
-    def nxtMnmxMv(self):
-        pass
+    def nxtMnmxMv(self, nodeName, currentState, nodeType, current_depth, valid_pits_list, free_turn, play_turn):
+        eval_list = []
+        if current_depth == self.maxDepth:
+            #evaluate
+            eval_value = self.evaluate(self.playTurn, currentState)
+            print nodeName,',',current_depth,',',eval_value
+            eval_list.append(eval_value)
+            
+            if free_turn:
+                #we need to again call Minimax
+                for pit_id in valid_pits_list:
+                    again_free_turn, pseudoState = nextState(self, currentState, play_turn, pit_id)
+                    new_pits_list = []
+                    if again_free_turn:
+                        new_pits_list = self.get_pits_valid_state(pseudoState, play_turn)
+                    eval_list.append(self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), pseudoState, nodeType, current_depth, \
+                                                      new_pits_list, free_turn, new_pits_list, play_turn)
+                
+            else:
+                #we need to evaluate, print and return the evaluated value
+                return eval_value
+            
+            
+            
+            
+        else:
+            # current_depth<max_depth
+            if nodeType == parma.NODE_TYPE[MAX_NODE]:
+                print nodeName, ',', current_depth, ',', NODE_TYPE_STR[MAX_NODE]
+                eval_list.append(PLUS_INFINITY)
+            else:
+                print nodeName, ',', current_depth, ',', NODE_TYPE_STR[MIN_NODE]
+                eval_list.append(MINUS_INFINITY)
+                
+                
+        
         
     def nxtABMv(self):
         pass
@@ -193,14 +229,17 @@ class Game:
                     playerId = 2
                     step = -1
         return (free_turn, next_pit_id, playerId, pl_list, pl_score) 
-        
+    
+    def get_pits_valid_state(self, stateObj, play_turn):
+        player = stateObj.players[play_turn]
+        return player.get_valid_list()
         
 class GameState:
     def __init__(self, players):
         self.players = players  #dictionary for holding player objects against their ID
     def print_info(self):
         for pid in self.players:
-            self.players[pid].print_info()
+            self.players[pid].print_info() 
     
 class GamePlayer:
     def __init__(self, id, pitsList, score):
