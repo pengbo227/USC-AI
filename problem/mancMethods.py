@@ -1,7 +1,7 @@
 import mancParam as param
 
 def get_node_name(playerId, pit_id):
-    return param.PLAYER_LABEL[playerId] + str(pit_id)
+    return param.PLAYER_LABEL[playerId] + str(pit_id+1)
  
 def return_opposite_type(nodeType, return_list):
     if nodeType == param.MAX_NODE:

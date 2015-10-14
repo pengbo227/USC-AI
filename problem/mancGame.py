@@ -46,7 +46,7 @@ class Game:
         if self.method == param.TASK_OPTION['GREEDY']:
             pit_id, newState = self.nxtGreedyMv(stateObj, valid_pits_list)
         elif self.method == param.TASK_OPTION['MINIMAX']:
-            pit_id, newState = self.nxtMnmxMv('root', stateObj, param.MAX_NODE, 0, valid_pits_list, play_turn)
+            pit_id, newState = self.nxtMnmxMv('root', stateObj, param.MAX_NODE, 0, valid_pits_list, method.get_opponent_id(play_turn))
         elif self.method == param.TASK_OPTION['ALPHABETA']:
             pit_id, newState = self.nxtABMv(stateObj, valid_pits_list)
         else:
@@ -163,16 +163,16 @@ class Game:
                     if child_state.freeTurn:
                         #calculate the valid_pits_list for the child
                         child_valid_pits_list = child_state.players[play_turn].get_valid_list()
-                    returnList.append(self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, nodeType, current_depth, child_valid_pits_list, play_turn)
+                    returnList.append(self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, nodeType, current_depth, child_valid_pits_list, play_turn))
                 
-                return return_opposite_type(nodeType, returnList)
+                return method.return_opposite_type(nodeType, returnList)
         
         else:
         #if current_depth!=maxDepth
-            if nodeType == MAX_NODE:
-                print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[MAX_NODE]
+            if nodeType == param.MAX_NODE:
+                print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[param.MAX_NODE]
             else:
-                print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[MIN_NODE]
+                print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[param.MIN_NODE]
             
             if currentState.freeTurn:
                 #it will pass same nodetype, depth to child
