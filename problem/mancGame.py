@@ -11,7 +11,7 @@ class Game:
         self.maxDepth = depth
     
     def play(self):
-        pit_id, stateObj = self.call_method(self.currentState)
+        pit_id, stateObj = self.call_method(self.currentState, self.playTurn)
         print '\nnew state selected\n'
         stateObj.print_info()
         #print output state
@@ -41,12 +41,12 @@ class Game:
         return line
         
     
-    def call_method(self, stateObj):
-        valid_pits_list = stateObj.players[self.playTurn].get_valid_list()
+    def call_method(self, stateObj, play_turn):
+        valid_pits_list = stateObj.players[play_turn].get_valid_list()
         if self.method == param.TASK_OPTION['GREEDY']:
             pit_id, newState = self.nxtGreedyMv(stateObj, valid_pits_list)
         elif self.method == param.TASK_OPTION['MINIMAX']:
-            pit_id, newState = self.nxtMnmxMv(stateObj, valid_pits_list)
+            pit_id, newState = self.nxtMnmxMv('root', stateObj, param.MAX_NODE, 0, valid_pits_list, play_turn)
         elif self.method == param.TASK_OPTION['ALPHABETA']:
             pit_id, newState = self.nxtABMv(stateObj, valid_pits_list)
         else:
@@ -93,12 +93,17 @@ class Game:
         players[param.PLAYER_ID1] = pl1
         players[param.PLAYER_ID2] = pl2
         pseudoState = GameState(players)
-        if free_turn:
+        if free_turn and self.method ==  param.TASK_OPTION['MINIMAX']:
+            pseudoState.free_turn = True
+            return pseudoState
+            
+        if free_turn and self.method ==  param.TASK_OPTION['GREEDY']:
             print 'free turn'
             #pseudoState.print_info()
-            pit_id, pseudoState = self.call_method(pseudoState)
+            pit_id, pseudoState = self.call_method(pseudoState, play_turn)
             #print 'state after free turn'
             #pseudoState.print_info()
+            return pseudoState
         return pseudoState
     
     def nxtGreedyMv(self, stateObj, valid_pits_list):
@@ -133,42 +138,64 @@ class Game:
             max_pid = keyList[0]
         return max_pid
     
-    def nxtMnmxMv(self, nodeName, currentState, nodeType, current_depth, valid_pits_list, free_turn, play_turn):
-        eval_list = []
-        if current_depth == self.maxDepth:
-            #evaluate
-            eval_value = self.evaluate(self.playTurn, currentState)
-            print nodeName,',',current_depth,',',eval_value
-            eval_list.append(eval_value)
-            
-            if free_turn:
-                #we need to again call Minimax
-                for pit_id in valid_pits_list:
-                    again_free_turn, pseudoState = nextState(self, currentState, play_turn, pit_id)
-                    new_pits_list = []
-                    if again_free_turn:
-                        new_pits_list = self.get_pits_valid_state(pseudoState, play_turn)
-                    eval_list.append(self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), pseudoState, nodeType, current_depth, \
-                                                      new_pits_list, free_turn, new_pits_list, play_turn)
-                
-            else:
-                #we need to evaluate, print and return the evaluated value
-                return eval_value
-            
-            
-            
-            
-        else:
-            # current_depth<max_depth
-            if nodeType == parma.NODE_TYPE[MAX_NODE]:
-                print nodeName, ',', current_depth, ',', NODE_TYPE_STR[MAX_NODE]
-                eval_list.append(PLUS_INFINITY)
-            else:
-                print nodeName, ',', current_depth, ',', NODE_TYPE_STR[MIN_NODE]
-                eval_list.append(MINUS_INFINITY)
-                
-                
+    def nxtMnmxMv(self, nodeName, currentState, nodeType, current_depth, valid_pits_list, play_turn):
         
+        #1. If free turn then
+           #case 1.a: if node_type == Min then return Max
+           #case 1.b: if node_type == Max then return Min
+        #2. If not free turn then
+            #case 2.a: if node_type == Min then return Min
+            #case 2.b: if node_type == Max then return Max
+        returnList = []
+        if current_depth == self.maxDepth:
+            # as lst depth evaluate and print
+            eval_val = self.evaluate(self.playTurn, currentState)
+            
+            print nodeName, ',', current_depth, ',', eval_val
+            if not currentState.freeTurn:
+                return eval_val
+            else: #if current state is free turn the return opposite value than its nodetype
+                #what to do if terminating node extends
+                # go through the valid pits list and call minimax
+                for pit_id in valid_pits_list:
+                    child_state = self.nextState(currentState, play_turn, pit_id)
+                    child_valid_pits_list = []
+                    if child_state.freeTurn:
+                        #calculate the valid_pits_list for the child
+                        child_valid_pits_list = child_state.players[play_turn].get_valid_list()
+                    returnList.append(self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, nodeType, current_depth, child_valid_pits_list, play_turn)
+                
+                return return_opposite_type(nodeType, returnList)
+        
+        else:
+        #if current_depth!=maxDepth
+            if nodeType == MAX_NODE:
+                print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[MAX_NODE]
+            else:
+                print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[MIN_NODE]
+            
+            if currentState.freeTurn:
+                #it will pass same nodetype, depth to child
+                #valid pit list should from the same play_turn as it will now be extended
+                for pit_id in valid_pits_list:
+                    child_state = self.nextState(currentState, play_turn, pit_id)
+                    child_valid_pits_list = child_state.players[play_turn].get_valid_list()
+                    returnList.append(self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, method.alternate_type(nodeType),\
+                                current_depth+1, child_valid_pits_list, play_turn))
+                    #this node is free_turn so will return opposite vals from its node type
+                    print nodeName, ',',current_depth, ',', method.return_opposite_type(returnList)
+                
+            else:
+                #valid_pits_list should be the opponents valid pit list
+                for pit_id in valid_pits_list:
+                    opponent_turn = method.get_opponent_id(play_turn)
+                    child_state = self.nextState(currentState, opponent_turn, pit_id)
+                    child_valid_pits_list = child_state.players[opponent_turn].get_valid_list()
+                    returnList.append(self.nxtMnmxMv(method.get_node_name(opponent_turn, pit_id), child_state, method.alternate_type(nodeType),\
+                                current_depth+1, child_valid_pits_list, opponent_turn))
+                    # this node is not free_turn --> so return same as nodetype
+                    print nodeName, ',',current_depth, ',', method.return_same_type(nodeType, returnList)
+                return method.return_same_type(nodeType, returnList)
         
     def nxtABMv(self):
         pass
@@ -237,6 +264,8 @@ class Game:
 class GameState:
     def __init__(self, players):
         self.players = players  #dictionary for holding player objects against their ID
+        self.freeTurn = False #indicates whether we have to continue playing 
+        
     def print_info(self):
         for pid in self.players:
             self.players[pid].print_info() 
@@ -263,17 +292,3 @@ class GamePlayer:
         print 'score', self.score
         print 'pits count', len(self.pitsList)
         print 'pitlist:', self.pitsList
-
-        
-'''     
-class Pit:
-    def __init__(self, count, playerId):
-        self.currentCount = count
-        self.palyer = playerId
-        #self.initialCount = count
-    
-    def isEmpty(self):
-        return self.count == 0
-    
-    def 
-'''
