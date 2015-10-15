@@ -11,7 +11,7 @@ class Game:
         self.maxDepth = depth
     
     def play(self):
-        pit_id, stateObj = self.call_method(self.currentState, self.playTurn)
+        stateObj = self.call_method(self.currentState, self.playTurn)
         print '\nnew state selected\n'
         stateObj.print_info()
         #print output state
@@ -41,17 +41,22 @@ class Game:
         return line
         
     
-    def call_method(self, stateObj, play_turn):
+    def call_method(self, stateObj, play_turn, nodeName=None):
         valid_pits_list = stateObj.players[play_turn].get_valid_list()
         if self.method == param.TASK_OPTION['GREEDY']:
-            pit_id, newState = self.nxtGreedyMv(stateObj, valid_pits_list)
+            newState = self.nxtGreedyMv(stateObj, valid_pits_list)
         elif self.method == param.TASK_OPTION['MINIMAX']:
-            pit_id, newState = self.nxtMnmxMv('root', stateObj, param.MAX_NODE, 0, valid_pits_list, method.get_opponent_id(play_turn))
+            if nodeName == None:
+                nodeName = 'root'
+            score, index = self.nxtMnmxMv(nodeName, stateObj, param.MAX_NODE, 0, valid_pits_list, play_turn)
+            self.method = param.TASK_OPTION['GREEDY']
+            pit_id = index+1
+            newState = self.nextState(stateObj, play_turn, pit_id)
         elif self.method == param.TASK_OPTION['ALPHABETA']:
             pit_id, newState = self.nxtABMv(stateObj, valid_pits_list)
         else:
             return None, None
-        return pit_id, newState
+        return newState
     
     def nextState(self, stateObj, play_turn, pitid):    
         total_pits = self.totalPits
@@ -94,13 +99,13 @@ class Game:
         players[param.PLAYER_ID2] = pl2
         pseudoState = GameState(players)
         if free_turn and self.method ==  param.TASK_OPTION['MINIMAX']:
-            pseudoState.free_turn = True
-            return pseudoState
+            pseudoState.freeTurn = True
+            
             
         if free_turn and self.method ==  param.TASK_OPTION['GREEDY']:
             print 'free turn'
             #pseudoState.print_info()
-            pit_id, pseudoState = self.call_method(pseudoState, play_turn)
+            pseudoState = self.call_method(pseudoState, play_turn)
             #print 'state after free turn'
             #pseudoState.print_info()
             return pseudoState
@@ -117,7 +122,7 @@ class Game:
         pit_id = self.batch_evaluate(next_pstate)
         print 'pit selcted by greedy',pit_id
         #next_pstate[pit_id].print_info()
-        return pit_id, next_pstate[pit_id] 
+        return next_pstate[pit_id] 
     
     def batch_evaluate(self, stateList):
         #print 'stateList', stateList
@@ -146,6 +151,9 @@ class Game:
         #2. If not free turn then
             #case 2.a: if node_type == Min then return Min
             #case 2.b: if node_type == Max then return Max
+        print '\n\nNodename:',nodeName, 'valid list:', valid_pits_list, 'current_depth',current_depth,'freeTurn',currentState.freeTurn, \
+                'play_turn',play_turn
+        #print currentState.print_info()
         returnList = []
         if current_depth == self.maxDepth:
             # as lst depth evaluate and print
@@ -153,19 +161,25 @@ class Game:
             
             print nodeName, ',', current_depth, ',', eval_val
             if not currentState.freeTurn:
-                return eval_val
+                print 'terminating node'
+                return eval_val, 0
             else: #if current state is free turn the return opposite value than its nodetype
                 #what to do if terminating node extends
                 # go through the valid pits list and call minimax
+                print 'depth match - free turn logic play_turn:',play_turn
                 for pit_id in valid_pits_list:
                     child_state = self.nextState(currentState, play_turn, pit_id)
                     child_valid_pits_list = []
                     if child_state.freeTurn:
                         #calculate the valid_pits_list for the child
                         child_valid_pits_list = child_state.players[play_turn].get_valid_list()
-                    returnList.append(self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, nodeType, current_depth, child_valid_pits_list, play_turn))
-                
-                return method.return_opposite_type(nodeType, returnList)
+                    val, idx = self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, nodeType, current_depth, child_valid_pits_list, play_turn)
+                    returnList.append(val)
+                    print nodeName, ',',current_depth, ',', method.return_opposite_type(nodeType, returnList)
+                ret_val = method.return_opposite_type(nodeType, returnList)
+                idx = returnList.index(ret_val)
+                print 'ret_val',ret_val,'idx',idx, 'retList',returnList
+                return ret_val,idx
         
         else:
         #if current_depth!=maxDepth
@@ -178,24 +192,55 @@ class Game:
                 #it will pass same nodetype, depth to child
                 #valid pit list should from the same play_turn as it will now be extended
                 for pit_id in valid_pits_list:
+                    opponent_turn = method.get_opponent_id(play_turn)
                     child_state = self.nextState(currentState, play_turn, pit_id)
-                    child_valid_pits_list = child_state.players[play_turn].get_valid_list()
-                    returnList.append(self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, method.alternate_type(nodeType),\
-                                current_depth+1, child_valid_pits_list, play_turn))
+                    #child_valid_pits_list = child_state.players[play_turn].get_valid_list()
+                    next_depth = current_depth
+                    next_node_type = nodeType
+                    if child_state.freeTurn:
+                        print 'child state- freeturn'
+                        child_valid_pits_list = child_state.players[play_turn].get_valid_list()
+                        next_play_turn = play_turn
+  
+                    else:
+                        print 'child state not freeturn means opponent'
+                        child_valid_pits_list = child_state.players[opponent_turn].get_valid_list()
+                        next_play_turn = opponent_turn
+                    val, idx = self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, next_node_type,\
+                                next_depth, child_valid_pits_list, next_play_turn)
+                    returnList.append(val)
                     #this node is free_turn so will return opposite vals from its node type
-                    print nodeName, ',',current_depth, ',', method.return_opposite_type(returnList)
+                    print nodeName, ',',current_depth, ',', method.return_opposite_type(nodeType, returnList)
+                ret_val = method.return_opposite_type(nodeType, returnList)
+                idx = returnList.index(ret_val)
+                print 'ret_val',ret_val,'idx',idx,'retList',returnList
+                return ret_val, idx
                 
             else:
                 #valid_pits_list should be the opponents valid pit list
                 for pit_id in valid_pits_list:
                     opponent_turn = method.get_opponent_id(play_turn)
-                    child_state = self.nextState(currentState, opponent_turn, pit_id)
-                    child_valid_pits_list = child_state.players[opponent_turn].get_valid_list()
-                    returnList.append(self.nxtMnmxMv(method.get_node_name(opponent_turn, pit_id), child_state, method.alternate_type(nodeType),\
-                                current_depth+1, child_valid_pits_list, opponent_turn))
+                    child_state = self.nextState(currentState, play_turn, pit_id)
+                    #print 'child_state\n',child_state.print_info()
+                    if child_state.freeTurn:
+                        print 'child state- freeturn'
+                        child_valid_pits_list = child_state.players[play_turn].get_valid_list()
+                        next_play_turn = play_turn
+                        next_depth = current_depth+1
+                    else:
+                        print 'child state not freeturn'
+                        child_valid_pits_list = child_state.players[opponent_turn].get_valid_list()
+                        next_play_turn = opponent_turn
+                        next_depth = current_depth+1
+                    val, idx = self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, method.alternate_type(nodeType),\
+                                next_depth, child_valid_pits_list, next_play_turn)
+                    returnList.append(val)
                     # this node is not free_turn --> so return same as nodetype
                     print nodeName, ',',current_depth, ',', method.return_same_type(nodeType, returnList)
-                return method.return_same_type(nodeType, returnList)
+                ret_val = method.return_same_type(nodeType, returnList)
+                idx = returnList.index(ret_val)
+                print 'ret_val',ret_val,'idx',idx,'retList',returnList
+                return ret_val, idx
         
     def nxtABMv(self):
         pass
@@ -229,7 +274,7 @@ class Game:
             playerId = 2
         
         stone_count = pl_list[play_turn][pitid]
-        print 'pitid ',pitid, ' stones:',stone_count
+        #print 'pitid ',pitid, ' stones:',stone_count
         
         #emptying the stones from selected pitid
         pl_list[play_turn][pitid] = 0
@@ -267,7 +312,7 @@ class GameState:
         self.freeTurn = False #indicates whether we have to continue playing 
         
     def print_info(self):
-        for pid in self.players:
+        for pid in sorted(self.players,reverse=True):
             self.players[pid].print_info() 
     
 class GamePlayer:
@@ -288,7 +333,7 @@ class GamePlayer:
         return valid
     
     def print_info(self):
-        print 'Player Id:', self.id
+        #print 'Player Id:', self.id
         print 'score', self.score
-        print 'pits count', len(self.pitsList)
-        print 'pitlist:', self.pitsList
+        #print 'pits count', len(self.pitsList)
+        print 'Player Id:', self.id, 'pitlist:', self.pitsList
