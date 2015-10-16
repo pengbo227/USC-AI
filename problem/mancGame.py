@@ -277,7 +277,8 @@ class Game:
                 #what to do if terminating node extends
                 # go through the valid pits list and call minimax
                 for pit_id in valid_pits_list:
-                    
+                    alpha_update_pending = False
+                    beta_update_pending = False
                     child_state = self.nextState(currentState, play_turn, pit_id)
                     child_valid_pits_list = []
                     next_depth = current_depth
@@ -288,27 +289,33 @@ class Game:
                     val, ret_state, is_pruned = self.nxtABMv(method.get_node_name(play_turn, pit_id), child_state, nodeType, \
                                                         next_depth, child_valid_pits_list, play_turn, alpha, beta)
                     
+                    #check for pruning!!
                     if nodeType == param.MAX_NODE:
-                        # buts its a freeturn so update beta
-                        if beta > val:
-                            beta = val
+                            #as it is free turn we will update its beta value
+                        prune_needed = method.should_prune(alpha, val)
+                        beta_update_pending = True
                     else:
-                        if alpha < val:
-                            alpha = val
-                    gloabal_ret_state = ret_state
-                    prune_needed = method.should_prune(alpha, beta) 
+                        prune_needed = method.should_prune(val, beta)
+                        alpha_update_pending = True
+                    
                     if prune_needed:
-                        # Now what do
-                        if nodeType == param.MAX_NODE:
-                            print_val = beta
+                        print nodeName, ',', current_depth, ',', val, ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
+                        if alpha_update_pending:
+                            alpha = val
                         else:
-                            print_val = alpha
-                        print nodeName, ',', current_depth, ',', print_val, ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
+                            beta = val
                         return method.get_eval(nodeType, alpha, beta, currentState.freeTurn), None, param.PRUNED
+                    else:                                                                          
+                        if nodeType == param.MAX_NODE:
+                            # buts its a freeturn so update beta
+                            if beta > val:
+                                beta = val
+                        else:
+                            if alpha < val:
+                                alpha = val
+                        gloabal_ret_state = ret_state                       
                     print nodeName, ',', current_depth, ',', method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn)), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
                     
-                    
-                
                 #If code reaches here then we will return the correct value
                 ret_state = global_ret_state
                 if (global_ret_state.depth > currentState.depth) and currentState.depth!=0:
@@ -324,6 +331,8 @@ class Game:
             if currentState.freeTurn:
                 print 'inter free turn'
                 for pit_id in valid_pits_list:
+                    alpha_update_pending = False
+                    beta_update_pending = False
                     opponent_turn = method.get_opponent_id(play_turn)
                     child_state = self.nextState(currentState, play_turn, pit_id)
                     #child_valid_pits_list = child_state.players[play_turn].get_valid_list()
@@ -340,34 +349,48 @@ class Game:
                     val, ret_state, is_pruned = self.nxtABMv(method.get_node_name(play_turn, pit_id), child_state, next_node_type,\
                                 next_depth, child_valid_pits_list, next_play_turn, alpha, beta)
                     
-                
+                    
+                    #check for pruning!!
                     if nodeType == param.MAX_NODE:
-                        # buts its a freeturn so update beta
-                        if beta > val:
-                            beta = val
+                            #as it is free turn we will update its beta value
+                        prune_needed = method.should_prune(alpha, val)
+                        beta_update_pending = True
                     else:
-                        if alpha < val:
-                            alpha = val
-                    gloabal_ret_state = ret_state
+                        prune_needed = method.should_prune(val, beta)
+                        alpha_update_pending = True
                     
-                    
-                    print nodeName, ',', current_depth, ',', method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn)), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
-                    prune_needed = method.should_prune(alpha, beta)
                     if prune_needed:
-                        # Now what do
+                        print nodeName, ',', current_depth, ',', val, ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
+                        if alpha_update_pending:
+                            alpha = val
+                        else:
+                            beta = val
                         return method.get_eval(nodeType, alpha, beta, currentState.freeTurn), None, param.PRUNED
-                
-                #If code reaches here then we will return the correct value
+                    
+                    else:                                                                          
+                        if nodeType == param.MAX_NODE:
+                            # buts its a freeturn so update beta
+                            if beta > val:
+                                beta = val
+                        else:
+                            if alpha < val:
+                                alpha = val
+                        gloabal_ret_state = ret_state                       
+                    print nodeName, ',', current_depth, ',', method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn)), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
+                    
+                    
                 ret_state = global_ret_state
                 if (global_ret_state.depth > currentState.depth) and currentState.depth!=0:
                     ret_state = currentState
                 elif (global_ret_state == currentState) and currentState.depth!=0:
                     ret_state = currentState
-                return method.get_eval(nodeType, alpha, beta, currentState.freeTurn), ret_state, param.NOT_PRUNED
+                return method.get_eval(nodeType, alpha, beta, currentState.freeTurn), ret_state, param.NOT_PRUNED    
                     
             
             else:
                 for pit_id in valid_pits_list:
+                    alpha_update_pending = False
+                    beta_update_pending = False
                     opponent_turn = method.get_opponent_id(play_turn)
                     child_state = self.nextState(currentState, play_turn, pit_id)
                     #print 'child_state\n',child_state.print_info()
@@ -383,19 +406,32 @@ class Game:
                                 next_depth, child_valid_pits_list, next_play_turn, alpha, beta)
                     
                     if nodeType == param.MAX_NODE:
-                        
-                        if alpha < val:
-                            alpha = val
+                            #as it is not free turn we will update its alpha value
+                        prune_needed = method.should_prune(val, beta)
+                        alpha_update_pending = True
                     else:
-                        if beta > val:
-                            beta = val
-                    gloabal_ret_state = ret_state
-                    print nodeName, ',', current_depth, ',', method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn)), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
-                    prune_needed = method.should_prune(alpha, beta)
+                        prune_needed = method.should_prune(alpha, val)
+                        beta_update_pending = True
+                    
                     if prune_needed:
-                        # Now what do
+                        print nodeName, ',', current_depth, ',', val, ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
+                        if alpha_update_pending:
+                            alpha = val
+                        else:
+                            beta = val
                         return method.get_eval(nodeType, alpha, beta, currentState.freeTurn), None, param.PRUNED
-                        
+                    else:                                                                          
+                        if nodeType == param.MAX_NODE:
+                            # buts it is not a freeturn so update beta
+                            if alpha < val:
+                                alpha = val
+                        else:
+                            if beta > val:
+                                beta = val
+                                                 
+                        gloabal_ret_state = ret_state
+                    print nodeName, ',', current_depth, ',', method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn)), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
+                    
                 # after visiting all child and no pruning done
                 ret_state = global_ret_state
                 if (global_ret_state.depth > currentState.depth) and currentState.depth!=0:
