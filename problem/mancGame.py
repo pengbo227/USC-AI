@@ -258,7 +258,59 @@ class Game:
                     ret_state = returnStateList[idx]
                 return ret_val,ret_state
         
-    def nxtABMv(self, nodeName, currentState, nodeType, current_depth, valid_pits_list, play_turn):
+    def nxtABMv(self, nodeName, currentState, nodeType, current_depth, valid_pits_list, play_turn, alpha, beta):
+        returnValList = []
+        returnStateList = []
+        currentState.depth = current_depth
+        if current_depth == self.maxDepth:
+            global_ret_state = currentState
+            # as lst depth evaluate and print
+            eval_val = self.evaluate(self.playTurn, currentState)
+            print nodeName, ',', current_depth, ',', eval_val,',', method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
+            
+            if not currentState.freeTurn:
+                return eval_val, currentState, param.NOT_PRUNED
+            else: 
+                #if current state is free turn the return opposite value than its nodetype
+                #what to do if terminating node extends
+                # go through the valid pits list and call minimax
+                for pit_id in valid_pits_list:
+                    child_state = self.nextState(currentState, play_turn, pit_id)
+                    child_valid_pits_list = []
+                    next_depth = current_depth
+                    if child_state.freeTurn:
+                        #calculate the valid_pits_list for the child
+                        child_valid_pits_list = child_state.players[play_turn].get_valid_list()
+                    val, ret_state, is_pruned = self.nxtABMv(self, nodeName, currentState, nodeType, \
+                                                        current_depth, valid_pits_list, play_turn, alpha, beta)
+                    if is_pruned:
+                        #do not update alpha-beta scores
+                        pass
+                    else:
+                        if nodeType == param.MAX_NODE:
+                            # buts its a freeturn so update beta
+                            if beta > val:
+                                beta = val
+                        else:
+                            if alpha < val:
+                                alpha = val
+                        gloabal_ret_state = ret_state
+                    
+                    print nodeName, ',', current_depth, ',', method.get_eval(nodeType, alpha, beta, currentState.freeTurn), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
+                    prune_needed = method.should_prune(alpha, beta)
+                    if prune_needed:
+                        # Now what do
+                        return None, None, None
+                
+                #If code reaches here then we will return the correct value
+                ret_state = global_ret_state
+                if (global_ret_state.depth > currentState.depth) and currentState.depth!=0:
+                    ret_state = currentState
+                elif (global_ret_state == currentState) and currentState.depth!=0:
+                    ret_state = currentState
+                return method.get_eval(nodeType, alpha, beta, currentState.freeTurn),ret_state
+                     
+        
     
     def print_state(self):
         self.currentState.print_info()
