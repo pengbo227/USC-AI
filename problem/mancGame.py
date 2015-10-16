@@ -43,7 +43,7 @@ class Game:
     
     def call_method(self, stateObj, play_turn, nodeName=None):
         valid_pits_list = stateObj.players[play_turn].get_valid_list()
-		newState = None
+        newState = None
         if self.method == param.TASK_OPTION['GREEDY']:
             newState = self.nxtGreedyMv(stateObj, valid_pits_list)
         elif self.method == param.TASK_OPTION['MINIMAX']:
@@ -52,7 +52,7 @@ class Game:
             score, newState = self.nxtMnmxMv(nodeName, stateObj, param.MAX_NODE, 0, valid_pits_list, play_turn)
             
         elif self.method == param.TASK_OPTION['ALPHABETA']:
-			newState = self.nxtABMv(stateObj, valid_pits_list)
+            newState = self.nxtABMv(stateObj, valid_pits_list)
         else:
             return None, None
         return newState
@@ -258,8 +258,7 @@ class Game:
                     ret_state = returnStateList[idx]
                 return ret_val,ret_state
         
-    def nxtABMv(self):
-        pass
+    def nxtABMv(self, nodeName, currentState, nodeType, current_depth, valid_pits_list, play_turn):
     
     def print_state(self):
         self.currentState.print_info()

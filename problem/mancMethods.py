@@ -27,3 +27,8 @@ def alternate_type(nodeType):
         return param.MIN_NODE
     else:
         return param.MAX_NODE
+        
+def should_prune(alpha, beta):
+    if beta > alpha:
+        return False
+    return True
