@@ -35,9 +35,9 @@ def should_prune(alpha, beta):
 
 def print_alphabeta(value):
     if value == param.PLUS_INFINITY:
-        return param.NODE_TYPE_STR[MIN_NODE]
+        return param.NODE_TYPE_STR[param.MIN_NODE]
     elif value == param.MINUS_INFINITY:
-        return param.NODE_TYPE_STR[MAX_NODE]
+        return param.NODE_TYPE_STR[param.MAX_NODE]
     else:
         return value
 '''
@@ -47,7 +47,7 @@ def print_alphabeta(value):
 '''
 
 def get_eval(nodeType, alpha, beta, isFreeturn):
-   if not isFreeturn:
+    if not isFreeturn:
         if nodeType == param.MAX_NODE:
             return alpha
         else:
