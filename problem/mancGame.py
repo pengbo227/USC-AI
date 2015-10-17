@@ -9,25 +9,60 @@ class Game:
         self.playTurn = player_turn
         self.totalPits = totalPits
         self.maxDepth = depth
-    
+        self.nsfobj = None
+        self.tlfobj = None
+        self.__create_fobj()
+
+    def __create_fobj(self):
+        try:
+            os.remove(param.NEXT_STATE_FILE_NAME)
+        except Exception:
+            pass
+
+        try:
+            os.remove(param.TRAVERSE_LOG_NAME)
+        except Exception:
+            pass
+        
+        self.nsfobj = open(param.NEXT_STATE_FILE_NAME,'w')
+        if self.method >1:
+            self.tlfobj = open(param.TRAVERSE_LOG_NAME,'w')
+        else:
+            self.tlfobj = None
+        self.__write_title()
+
+    def __write_title(self):
+        if self.method == param.TASK_OPTION['MINIMAX']:
+            self.tlfobj.write(param.TRAV_MINIMAX_TITLE)
+        elif self.method == param.TASK_OPTION['ALPHABETA']:
+            self.tlfobj.write(param.TRAV_ALPHABETA_TITLE)
+
+    def __write_state(self, stateObj):
+        line = self.__output_pits_state(stateObj, param.PLAYER_ID2)
+        self.nsfobj.write(line + '\n')
+        line = self.__output_pits_state(stateObj, param.PLAYER_ID1)
+        self.nsfobj.write(line + '\n')
+        self.__output_score(stateObj, param.PLAYER_ID2)
+        self.__output_score(stateObj, param.PLAYER_ID1)
+        self.__close_files()
+
+    def __close_files(self):
+        if self.nsfobj:
+            self.nsfobj.close()
+        if self.tlfobj:
+            self.tlfobj.close()
+
     def play(self):
         stateObj = self.call_method(self.currentState, self.playTurn)
-        print '\nnew state selected\n'
+        #print '\nnew state selected\n'
         stateObj.print_info()
         #print output state
-        fobj = open('next_state.txt','w')
-        line = self.__output_pits_state(stateObj, param.PLAYER_ID2)
-        fobj.write(line + '\n')
-        line = self.__output_pits_state(stateObj, param.PLAYER_ID1)
-        fobj.write(line + '\n')
-        self.__output_score(fobj, stateObj, param.PLAYER_ID2)
-        self.__output_score(fobj, stateObj, param.PLAYER_ID1)
-        fobj.close()
+        self.__write_state(stateObj)
         
-    def __output_score(self, fobj, state, playerId):
+    def __output_score(self, state, playerId):
         score = state.players[playerId].score
         line = str(score) + '\n'
-        fobj.write(line)
+        self.nsfobj.write(line)
         
         
     def __output_pits_state(self, state, playerId):
@@ -265,17 +300,25 @@ class Game:
         returnStateList = []
         currentState.depth = current_depth
         global_ret_state = currentState
+        eval_val = self.evaluate(self.playTurn, currentState)
+        method.write_entry_log(nodeName, nodeType, self.maxDepth, current_depth, alpha, beta, currentState.freeTurn, eval_val)
         if current_depth == self.maxDepth:
             # as lst depth evaluate and print
-            eval_val = self.evaluate(self.playTurn, currentState)
-            print nodeName, ',', current_depth, ',', eval_val,',', method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
-            
             if not currentState.freeTurn:
+                #eval_val = self.evaluate(self.playTurn, currentState)
+                #method.write_entry_log(nodeName, nodeType, self.maxDepth, current_depth, alpha, beta, currentState.freeturn, eval_val)
+                #print nodeName, ',', current_depth, ',', eval_val,',', method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
                 return eval_val, currentState, param.NOT_PRUNED
             else: 
                 #if current state is free turn the return opposite value than its nodetype
                 #what to do if terminating node extends
                 # go through the valid pits list and call minimax
+                # if nodeType == param.MAX_NODE:
+                #     #print +infinity
+                #     print nodeName,',',current_depth,',', method.print_alphabeta(param.PLUS_INFINITY),',',  method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
+                # else:
+                #     print nodeName,',',current_depth,',', method.print_alphabeta(param.MINUS_INFINITY),',',  method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
+
                 for pit_id in valid_pits_list:
                     alpha_update_pending = False
                     beta_update_pending = False
@@ -326,10 +369,17 @@ class Game:
                      
         #if it is a intermediatory node
         else:
-            print nodeName, ',', current_depth, ',', method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn)), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
+            #print nodeName, ',', current_depth, ',', method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn)), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
             
+
             if currentState.freeTurn:
-                print 'inter free turn'
+                #print 'inter free turn'
+                #  if nodeType == param.MAX_NODE:
+                #     #print +infinity
+                #     print nodeName,',',current_depth,',', method.print_alphabeta(param.PLUS_INFINITY),',',  method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
+                # else:
+                #     print nodeName,',',current_depth,',', method.print_alphabeta(param.MINUS_INFINITY),',',  method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
+
                 for pit_id in valid_pits_list:
                     alpha_update_pending = False
                     beta_update_pending = False
@@ -388,6 +438,12 @@ class Game:
                     
             
             else:
+                # if nodeType == param.MAX_NODE:
+                #     #print +infinity
+                #     print nodeName,',',current_depth,',', method.print_alphabeta(param.PLUS_INFINITY),',',  method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
+                # else:
+                #     print nodeName,',',current_depth,',', method.print_alphabeta(param.MINUS_INFINITY),',',  method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
+
                 for pit_id in valid_pits_list:
                     alpha_update_pending = False
                     beta_update_pending = False

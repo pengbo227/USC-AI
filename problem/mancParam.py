@@ -4,6 +4,11 @@ TASK_OPTION = {
 	'ALPHABETA':3,
 	'COMPETE':4
 }
+
+NEXT_STATE_FILE_NAME = 'next_state.txt'
+TRAV_MINIMAX_TITLE = 'Node,Depth,Value\n'
+TRAV_ALPHABETA_TITLE = 'Node,Depth,Value,Alpha,Beta\n'
+TRAVERSE_LOG_NAME = 'traverse_log.txt'
 PLAYER_ID1 = 1
 PLAYER_ID2 = 2
 NOT_PRUNED = 0

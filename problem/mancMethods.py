@@ -15,6 +15,9 @@ def return_same_type(nodeType, return_list):
     else:
         return min(return_list)
 
+def write_title(fobj, title):
+    fobj.write(title)
+
 def get_opponent_id(playId):
     #check whether removal makes changes in param.PLAYER_LIST
     if playId == param.PLAYER_ID1:
@@ -57,5 +60,26 @@ def get_eval(nodeType, alpha, beta, isFreeturn):
             return beta
         else:
             return alpha
+
+def intermediate_value(nodeType, isFreeturn):
+    val = ''
+    if isFreeturn:
+        if nodeType == param.MAX_NODE:
+            val = param.NODE_TYPE_STR[param.MIN_NODE]
+        else:
+            val = param.NODE_TYPE_STR[param.MAX_NODE]
+    else:
+        if nodeType == param.MAX_NODE:
+            val = param.NODE_TYPE_STR[param.MAX_NODE]
+        else:
+            val = param.NODE_TYPE_STR[param.MIN_NODE]
+    return val
+
+def write_entry_log(nodeName, nodeType, max_depth, current_depth, alpha, beta, isFreeturn, eval_val=None, fobj=None):
+    if max_depth == current_depth and not isFreeturn: #this is leaf
+        print nodeName, ',', current_depth, ',', eval_val,',', print_alphabeta(alpha), ',', print_alphabeta(beta)
+    else:
+        eval_value = intermediate_value(nodeType, isFreeturn)
+        print nodeName, ',', current_depth, ',', eval_val,',', print_alphabeta(alpha), ',', print_alphabeta(beta)
             
             
