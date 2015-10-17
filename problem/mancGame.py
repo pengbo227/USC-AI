@@ -42,8 +42,10 @@ class Game:
 
     def __write_state(self, stateObj):
         line = self.__output_pits_state(stateObj, param.PLAYER_ID2)
+        #print line + 'end'
         self.nsfobj.write(line + '\n')
         line = self.__output_pits_state(stateObj, param.PLAYER_ID1)
+        #print line + 'end'
         self.nsfobj.write(line + '\n')
         self.__output_score(stateObj, param.PLAYER_ID2)
         self.__output_score(stateObj, param.PLAYER_ID1)
@@ -74,8 +76,9 @@ class Game:
         pitsKeyList = sorted(pitsDict)
         for key in pitsKeyList:
             line=line+str(pitsDict[key]) + ' '
-        line.strip()
-        print 'board state - player id:', playerId, ' :',line 
+        line = line.strip()
+        # print 'stripping:', line+end
+        # print 'board state - player id:', playerId, ' :',line
         return line
         
     
@@ -196,14 +199,15 @@ class Game:
         returnValList = []
         returnStateList = []
         currentState.depth = current_depth
+        eval_val = self.evaluate(self.playTurn, currentState)
+        method.write_entry_log(self.tlfobj, param.TASK_OPTION['MINIMAX'], nodeName, nodeType, self.maxDepth, current_depth, currentState.freeTurn, eval_val, alpha=None, beta=None)
         if current_depth == self.maxDepth:
             # as lst depth evaluate and print
-            eval_val = self.evaluate(self.playTurn, currentState)
-            
-            print nodeName, ',', current_depth, ',', eval_val
+            #print nodeName, ',', current_depth, ',', eval_val
             if not currentState.freeTurn:
                 return eval_val, currentState
-            else: #if current state is free turn the return opposite value than its nodetype
+            else:
+                #if current state is free turn the return opposite value than its nodetype
                 #what to do if terminating node extends
                 # go through the valid pits list and call minimax
                 for pit_id in valid_pits_list:
@@ -217,7 +221,10 @@ class Game:
                         child_state, nodeType, next_depth, child_valid_pits_list, play_turn)
                     returnValList.append(val)
                     returnStateList.append(ret_state)
-                    print nodeName, ',',current_depth, ',', method.return_opposite_type(nodeType, returnValList)
+                    #print nodeName, ',',current_depth, ',', method.return_opposite_type(nodeType, returnValList)
+                    str_arr = str(nodeName) + ',' + str(current_depth) +','+ str(method.return_opposite_type(nodeType, returnValList)) + '\n'
+                    self.tlfobj.write(str_arr)
+
                 ret_val = method.return_opposite_type(nodeType, returnValList)
                 idx = returnValList.index(ret_val) 
                 if (returnStateList[idx].depth > currentState.depth) and currentState.depth!=0:
@@ -228,16 +235,16 @@ class Game:
         
         else:
         #if current_depth!=maxDepth
-            if nodeType == param.MAX_NODE:
-                if currentState.freeTurn:
-                    print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[param.MAX_NODE]
-                else:
-                    print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[param.MAX_NODE]
-            else:
-                if currentState.freeTurn:
-                    print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[param.MAX_NODE]
-                else:
-                    print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[param.MIN_NODE]
+            # if nodeType == param.MAX_NODE:
+            #     if currentState.freeTurn:
+            #         print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[param.MAX_NODE]
+            #     else:
+            #         print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[param.MAX_NODE]
+            # else:
+            #     if currentState.freeTurn:
+            #         print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[param.MAX_NODE]
+            #     else:
+            #         print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[param.MIN_NODE]
             
             if currentState.freeTurn:
                 #it will pass same nodetype, depth to child
@@ -261,7 +268,10 @@ class Game:
                     returnValList.append(val)
                     returnStateList.append(ret_state)
                     #this node is free_turn so will return opposite vals from its node type
-                    print nodeName, ',',current_depth, ',', method.return_opposite_type(nodeType, returnValList)
+                    #print nodeName, ',',current_depth, ',', method.return_opposite_type(nodeType, returnValList)
+                    str_arr = str(nodeName) + ',' + str(current_depth) +','+ str(method.return_opposite_type(nodeType, returnValList)) + '\n'
+                    self.tlfobj.write(str_arr)
+
                 ret_val = method.return_opposite_type(nodeType, returnValList)
                 idx = returnValList.index(ret_val)
                 if (returnStateList[idx].depth > currentState.depth) and currentState.depth!=0:
@@ -289,7 +299,10 @@ class Game:
                     returnValList.append(val)
                     returnStateList.append(ret_state)
                     # this node is not free_turn --> so return same as nodetype
-                    print nodeName, ',',current_depth, ',', method.return_same_type(nodeType, returnValList)
+                    #print nodeName, ',',current_depth, ',', method.return_same_type(nodeType, returnValList)
+                    str_arr = str(nodeName) + ',' + str(current_depth) +','+ str(method.return_same_type(nodeType, returnValList)) + '\n'
+                    self.tlfobj.write(str_arr)
+
                 ret_val = method.return_same_type(nodeType, returnValList)
                 idx = returnValList.index(ret_val)
                 if (returnStateList[idx].depth > currentState.depth) and currentState.depth!=0:
@@ -304,7 +317,7 @@ class Game:
         currentState.depth = current_depth
         global_ret_state = currentState
         eval_val = self.evaluate(self.playTurn, currentState)
-        method.write_entry_log(self.tlfobj, param.TASK_OPTION['ALPHABETA'], nodeName, nodeType, self.maxDepth, current_depth, alpha, beta, currentState.freeTurn, eval_val)
+        method.write_entry_log(self.tlfobj, param.TASK_OPTION['ALPHABETA'], nodeName, nodeType, self.maxDepth, current_depth, currentState.freeTurn, eval_val, alpha, beta)
         if current_depth == self.maxDepth:
             # as lst depth evaluate and print
             if not currentState.freeTurn:

@@ -75,15 +75,16 @@ def intermediate_value(nodeType, isFreeturn):
             val = param.NODE_TYPE_STR[param.MIN_NODE]
     return val
 
-def write_entry_log(fobj, method, nodeName, nodeType, max_depth, current_depth, alpha, beta, isFreeturn, eval_val=None):
+def write_entry_log(fobj, method, nodeName, nodeType, max_depth, current_depth, isFreeturn, eval_val=None, alpha=None, beta=None):
     if not (max_depth == current_depth and not isFreeturn): #this is leaf
-            eval_val = intermediate_value(nodeType, isFreeturn)
+        eval_val = intermediate_value(nodeType, isFreeturn)
 
     if method == param.TASK_OPTION['ALPHABETA']:
-        str_arr = nodeName + ',' + str(current_depth) + ',' + str(eval_val) + ',' + str(print_alphabeta(alpha)) + ',' + str(print_alphabeta(beta)) + '\n'
+        str_arr = str(nodeName) + ',' + str(current_depth) + ',' + str(eval_val) + ',' + str(print_alphabeta(alpha)) + ',' + str(print_alphabeta(beta)) + '\n'
     elif method == param.TASK_OPTION['MINIMAX']:
-        str_arr = nodeName + ',' + str(current_depth), ',', str(eval_val)
+        str_arr = str(nodeName) + ',' + str(current_depth) + ',' + str(eval_val) + '\n'
 
+    #print 'nodeName', nodeName, 'current_depth', current_depth, 'eval_val', eval_val
     fobj.write(str_arr)
 
             
