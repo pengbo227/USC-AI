@@ -1,6 +1,7 @@
 import mancParam as param
 import copy
 import mancMethods as method
+import os
 
 class Game:
     def __init__(self, state, method, player_turn, depth, totalPits):
@@ -16,13 +17,15 @@ class Game:
     def __create_fobj(self):
         try:
             os.remove(param.NEXT_STATE_FILE_NAME)
+            #print 'successfully removed next state file'
         except Exception:
             pass
 
         try:
             os.remove(param.TRAVERSE_LOG_NAME)
+            #print 'successfully removed traverse log'
         except Exception:
-            pass
+            pass    
         
         self.nsfobj = open(param.NEXT_STATE_FILE_NAME,'w')
         if self.method >1:
@@ -301,24 +304,12 @@ class Game:
         currentState.depth = current_depth
         global_ret_state = currentState
         eval_val = self.evaluate(self.playTurn, currentState)
-        method.write_entry_log(nodeName, nodeType, self.maxDepth, current_depth, alpha, beta, currentState.freeTurn, eval_val)
+        method.write_entry_log(self.tlfobj, param.TASK_OPTION['ALPHABETA'], nodeName, nodeType, self.maxDepth, current_depth, alpha, beta, currentState.freeTurn, eval_val)
         if current_depth == self.maxDepth:
             # as lst depth evaluate and print
             if not currentState.freeTurn:
-                #eval_val = self.evaluate(self.playTurn, currentState)
-                #method.write_entry_log(nodeName, nodeType, self.maxDepth, current_depth, alpha, beta, currentState.freeturn, eval_val)
-                #print nodeName, ',', current_depth, ',', eval_val,',', method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
                 return eval_val, currentState, param.NOT_PRUNED
             else: 
-                #if current state is free turn the return opposite value than its nodetype
-                #what to do if terminating node extends
-                # go through the valid pits list and call minimax
-                # if nodeType == param.MAX_NODE:
-                #     #print +infinity
-                #     print nodeName,',',current_depth,',', method.print_alphabeta(param.PLUS_INFINITY),',',  method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
-                # else:
-                #     print nodeName,',',current_depth,',', method.print_alphabeta(param.MINUS_INFINITY),',',  method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
-
                 for pit_id in valid_pits_list:
                     alpha_update_pending = False
                     beta_update_pending = False
@@ -342,7 +333,8 @@ class Game:
                         alpha_update_pending = True
                     
                     if prune_needed:
-                        print nodeName, ',', current_depth, ',', val, ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
+                        str_arr = str(nodeName) + ',' + str(current_depth) + ',' + str(val) + ',' + str(method.print_alphabeta(alpha)) + ',' + str(method.print_alphabeta(beta)) + '\n'
+                        self.tlfobj.write(str_arr)
                         if alpha_update_pending:
                             alpha = val
                         else:
@@ -357,8 +349,8 @@ class Game:
                             if alpha < val:
                                 alpha = val
                         gloabal_ret_state = ret_state                       
-                    print nodeName, ',', current_depth, ',', method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn)), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
-                    
+                    str_arr = str(nodeName) + ',' + str(current_depth) + ',' + str(method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn))) + ',' + str(method.print_alphabeta(alpha)) + ',' + str(method.print_alphabeta(beta)) + '\n'
+                    self.tlfobj.write(str_arr)
                 #If code reaches here then we will return the correct value
                 ret_state = global_ret_state
                 if (global_ret_state.depth > currentState.depth) and currentState.depth!=0:
@@ -369,17 +361,10 @@ class Game:
                      
         #if it is a intermediatory node
         else:
-            #print nodeName, ',', current_depth, ',', method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn)), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
             
-
             if currentState.freeTurn:
                 #print 'inter free turn'
-                #  if nodeType == param.MAX_NODE:
-                #     #print +infinity
-                #     print nodeName,',',current_depth,',', method.print_alphabeta(param.PLUS_INFINITY),',',  method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
-                # else:
-                #     print nodeName,',',current_depth,',', method.print_alphabeta(param.MINUS_INFINITY),',',  method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
-
+                
                 for pit_id in valid_pits_list:
                     alpha_update_pending = False
                     beta_update_pending = False
@@ -410,7 +395,9 @@ class Game:
                         alpha_update_pending = True
                     
                     if prune_needed:
-                        print nodeName, ',', current_depth, ',', val, ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
+                        #print nodeName, ',', current_depth, ',', val, ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
+                        str_arr = str(nodeName) + ',' + str(current_depth) + ',' + str(val) + ',' + str(method.print_alphabeta(alpha)) + ',' + str(method.print_alphabeta(beta)) + '\n'
+                        self.tlfobj.write(str_arr)
                         if alpha_update_pending:
                             alpha = val
                         else:
@@ -426,8 +413,9 @@ class Game:
                             if alpha < val:
                                 alpha = val
                         gloabal_ret_state = ret_state                       
-                    print nodeName, ',', current_depth, ',', method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn)), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
-                    
+                    #print nodeName, ',', current_depth, ',', method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn)), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
+                    str_arr = str(nodeName) + ',' + str(current_depth) + ',' + str(method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn))) + ',' + str(method.print_alphabeta(alpha)) + ',' + str(method.print_alphabeta(beta)) + '\n'
+                    self.tlfobj.write(str_arr)
                     
                 ret_state = global_ret_state
                 if (global_ret_state.depth > currentState.depth) and currentState.depth!=0:
@@ -438,12 +426,7 @@ class Game:
                     
             
             else:
-                # if nodeType == param.MAX_NODE:
-                #     #print +infinity
-                #     print nodeName,',',current_depth,',', method.print_alphabeta(param.PLUS_INFINITY),',',  method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
-                # else:
-                #     print nodeName,',',current_depth,',', method.print_alphabeta(param.MINUS_INFINITY),',',  method.print_alphabeta(alpha), ',', method.print_alphabeta(beta)
-
+                
                 for pit_id in valid_pits_list:
                     alpha_update_pending = False
                     beta_update_pending = False
@@ -470,7 +453,9 @@ class Game:
                         beta_update_pending = True
                     
                     if prune_needed:
-                        print nodeName, ',', current_depth, ',', val, ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
+                        #print nodeName, ',', current_depth, ',', val, ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
+                        str_arr = str(nodeName) + ',' + str(current_depth) + ',' + str(val) + ',' + str(method.print_alphabeta(alpha)) + ',' + str(method.print_alphabeta(beta)) + '\n'
+                        self.tlfobj.write(str_arr)
                         if alpha_update_pending:
                             alpha = val
                         else:
@@ -486,8 +471,10 @@ class Game:
                                 beta = val
                                                  
                         gloabal_ret_state = ret_state
-                    print nodeName, ',', current_depth, ',', method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn)), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
-                    
+                    #print nodeName, ',', current_depth, ',', method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn)), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
+                    str_arr = str(nodeName) + ',' + str(current_depth) + ',' + str(method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn))) + ',' + str(method.print_alphabeta(alpha)) + ',' + str(method.print_alphabeta(beta)) + '\n'
+                    self.tlfobj.write(str_arr)
+
                 # after visiting all child and no pruning done
                 ret_state = global_ret_state
                 if (global_ret_state.depth > currentState.depth) and currentState.depth!=0:
