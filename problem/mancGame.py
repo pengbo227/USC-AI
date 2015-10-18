@@ -103,10 +103,6 @@ class Game:
     def nextState(self, stateObj, play_turn, pitid):    
         total_pits = self.totalPits
         (free_turn, next_pit_id, playerId, pl_list, pl_score) = self.distribute(stateObj, play_turn, pitid)
-        # if free_turn:
-            # print 'pl_list',pl_list
-            # print 'next_pid',next_pit_id
-            # print 'score',pl_score
             
         if not free_turn:
             #check if the last updated pit has count == 1
@@ -131,6 +127,11 @@ class Game:
                     pl_score[real_id]= pl_score[real_id] + pl_list[opp_id][last_filled_pit] + 1
                     pl_list[opp_id][last_filled_pit] = 0
                     pl_list[real_id][last_filled_pit] = 0
+
+        #Now check for end game condition
+        is_player1_empty = pl_list[param.PLAYER_ID1] 
+        pl_list, pl_score, is_empty = self.__check_board_empty(pl_list, pl_score) 
+
                     
         #create new pseudostate and recur
         #1. Create Player objects
@@ -144,7 +145,7 @@ class Game:
             pseudoState.freeTurn = True
             
             
-        if free_turn and self.method ==  param.TASK_OPTION['GREEDY']:
+        if free_turn and self.method ==  param.TASK_OPTION['GREEDY'] and (not is_empty):
             print 'free turn'
             #pseudoState.print_info()
             pseudoState = self.call_method(pseudoState, play_turn)
@@ -153,6 +154,37 @@ class Game:
             return pseudoState
         return pseudoState
     
+    #it will check for whether any side of board is empty. If it is empty it will update the score and pl_list
+    def __check_board_empty(self, pl_list, pl_score):
+        pid1 = param.PLAYER_ID1
+        pid2 = param.PLAYER_ID2
+        is_empty = False
+        pl_empty = {}
+        pl_empty[pid1] = True
+        pl_empty[pid2] = True
+        for pid in pl_empty:
+            for key in pl_list[pid]:
+                if pl_list[pid][key]!=0:
+                    pl_empty[pid] = False
+                    break
+
+        if pl_empty[pid1]:
+            #empty pl_list[pid2]
+            is_empty = True
+            for key in pl_list[pid2]:
+                pl_score[pid2] += pl_list[pid2][key]
+                pl_list[pid2][key] = 0
+
+        if pl_empty[pid2]:
+            #empty pl_list[pid2]
+            is_empty = True
+            for key in pl_list[pid1]:
+                pl_score[pid1] += pl_list[pid1][key]
+                pl_list[pid1][key] = 0
+                 
+        return pl_list, pl_score, is_empty
+
+        
     def nxtGreedyMv(self, stateObj, valid_pits_list):
         next_pstate = {}
         #get only valid moves
@@ -195,11 +227,13 @@ class Game:
                 #'play_turn',play_turn
     
     def nxtMnmxMv(self, nodeName, currentState, nodeType, current_depth, valid_pits_list, play_turn):
-        #print currentState.print_info()
+        #print nodeName, currentState.print_info()
         returnValList = []
         returnStateList = []
         currentState.depth = current_depth
         eval_val = self.evaluate(self.playTurn, currentState)
+        ret_val = eval_val
+        ret_state = currentState
         method.write_entry_log(self.tlfobj, param.TASK_OPTION['MINIMAX'], nodeName, nodeType, self.maxDepth, current_depth, currentState.freeTurn, eval_val, alpha=None, beta=None)
         if current_depth == self.maxDepth:
             # as lst depth evaluate and print
@@ -217,12 +251,15 @@ class Game:
                     if child_state.freeTurn:
                         #calculate the valid_pits_list for the child
                         child_valid_pits_list = child_state.players[play_turn].get_valid_list()
+                        #if game reaches end then just update the return. Its automatically handled for current_depth == max_depth
                     val, ret_state = self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), \
                         child_state, nodeType, next_depth, child_valid_pits_list, play_turn)
                     returnValList.append(val)
                     returnStateList.append(ret_state)
                     #print nodeName, ',',current_depth, ',', method.return_opposite_type(nodeType, returnValList)
+                    #printing opposite because its freeturn
                     str_arr = str(nodeName) + ',' + str(current_depth) +','+ str(method.return_opposite_type(nodeType, returnValList)) + '\n'
+                    #print str_arr
                     self.tlfobj.write(str_arr)
 
                 ret_val = method.return_opposite_type(nodeType, returnValList)
@@ -234,18 +271,7 @@ class Game:
                 return ret_val,ret_state
         
         else:
-        #if current_depth!=maxDepth
-            # if nodeType == param.MAX_NODE:
-            #     if currentState.freeTurn:
-            #         print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[param.MAX_NODE]
-            #     else:
-            #         print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[param.MAX_NODE]
-            # else:
-            #     if currentState.freeTurn:
-            #         print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[param.MAX_NODE]
-            #     else:
-            #         print nodeName, ',', current_depth, ',',param.NODE_TYPE_STR[param.MIN_NODE]
-            
+        
             if currentState.freeTurn:
                 #it will pass same nodetype, depth to child
                 #valid pit list should from the same play_turn as it will now be extended
@@ -262,14 +288,20 @@ class Game:
                     else:
                         child_valid_pits_list = child_state.players[opponent_turn].get_valid_list()
                         next_play_turn = opponent_turn
-                        
-                    val, ret_state = self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, next_node_type,\
+
+                    if not child_valid_pits_list:
+                        val = self.evaluate(self.playTurn, child_state)
+                        ret_state = child_state
+                        #print the state
+                        str_arr = str(method.get_node_name(play_turn, pit_id)) + ',' + str(next_depth) + ',' + str(val) + '\n'
+                        self.tlfobj.write(str_arr)
+                    else:    
+                        val, ret_state = self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, next_node_type,\
                                 next_depth, child_valid_pits_list, next_play_turn)
                     returnValList.append(val)
                     returnStateList.append(ret_state)
-                    #this node is free_turn so will return opposite vals from its node type
-                    #print nodeName, ',',current_depth, ',', method.return_opposite_type(nodeType, returnValList)
                     str_arr = str(nodeName) + ',' + str(current_depth) +','+ str(method.return_opposite_type(nodeType, returnValList)) + '\n'
+                    #print str_arr
                     self.tlfobj.write(str_arr)
 
                 ret_val = method.return_opposite_type(nodeType, returnValList)
@@ -294,13 +326,20 @@ class Game:
                         child_valid_pits_list = child_state.players[opponent_turn].get_valid_list()
                         next_play_turn = opponent_turn
                         next_depth = current_depth+1
-                    val, ret_state = self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, method.alternate_type(nodeType),\
+
+                    if not child_valid_pits_list:
+                        val = self.evaluate(self.playTurn, child_state)
+                        ret_state = child_state
+                        #print the state
+                        str_arr = str(method.get_node_name(play_turn, pit_id)) + ',' + str(next_depth) + ',' + str(val) + '\n'
+                        self.tlfobj.write(str_arr)
+                    else:
+                        val, ret_state = self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, method.alternate_type(nodeType),\
                                 next_depth, child_valid_pits_list, next_play_turn)
                     returnValList.append(val)
                     returnStateList.append(ret_state)
-                    # this node is not free_turn --> so return same as nodetype
-                    #print nodeName, ',',current_depth, ',', method.return_same_type(nodeType, returnValList)
                     str_arr = str(nodeName) + ',' + str(current_depth) +','+ str(method.return_same_type(nodeType, returnValList)) + '\n'
+                    print str_arr
                     self.tlfobj.write(str_arr)
 
                 ret_val = method.return_same_type(nodeType, returnValList)
@@ -358,10 +397,11 @@ class Game:
                             # buts its a freeturn so update beta
                             if beta > val:
                                 beta = val
+                                global_ret_state = ret_state
                         else:
                             if alpha < val:
                                 alpha = val
-                        gloabal_ret_state = ret_state                       
+                                global_ret_state = ret_state                       
                     str_arr = str(nodeName) + ',' + str(current_depth) + ',' + str(method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn))) + ',' + str(method.print_alphabeta(alpha)) + ',' + str(method.print_alphabeta(beta)) + '\n'
                     self.tlfobj.write(str_arr)
                 #If code reaches here then we will return the correct value
@@ -393,8 +433,17 @@ class Game:
                     else:
                         child_valid_pits_list = child_state.players[opponent_turn].get_valid_list()
                         next_play_turn = opponent_turn
-                    
-                    val, ret_state, is_pruned = self.nxtABMv(method.get_node_name(play_turn, pit_id), child_state, next_node_type,\
+
+                    if not child_valid_pits_list:
+                        val = self.evaluate(self.playTurn, child_state)
+                        ret_state = child_state
+                        is_pruned = False
+                        #print the state
+                        #str_arr = str(method.get_node_name(play_turn, pit_id)) + ',' + str(next_depth) + ',' + str(val) + '\n'
+                        str_arr = str(method.get_node_name(play_turn, pit_id)) + ',' + str(next_depth) + ',' + str(val) + ',' + str(method.print_alphabeta(alpha)) + ',' + str(method.print_alphabeta(beta)) + '\n'
+                        self.tlfobj.write(str_arr)
+                    else:
+                        val, ret_state, is_pruned = self.nxtABMv(method.get_node_name(play_turn, pit_id), child_state, next_node_type,\
                                 next_depth, child_valid_pits_list, next_play_turn, alpha, beta)
                     
                     
@@ -422,10 +471,11 @@ class Game:
                             # buts its a freeturn so update beta
                             if beta > val:
                                 beta = val
+                                global_ret_state = ret_state
                         else:
                             if alpha < val:
                                 alpha = val
-                        gloabal_ret_state = ret_state                       
+                                global_ret_state = ret_state                       
                     #print nodeName, ',', current_depth, ',', method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn)), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
                     str_arr = str(nodeName) + ',' + str(current_depth) + ',' + str(method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn))) + ',' + str(method.print_alphabeta(alpha)) + ',' + str(method.print_alphabeta(beta)) + '\n'
                     self.tlfobj.write(str_arr)
@@ -454,7 +504,17 @@ class Game:
                         child_valid_pits_list = child_state.players[opponent_turn].get_valid_list()
                         next_play_turn = opponent_turn
                         next_depth = current_depth+1
-                    val, ret_state, is_pruned = self.nxtABMv(method.get_node_name(play_turn, pit_id), child_state, method.alternate_type(nodeType),\
+
+                    if not child_valid_pits_list:
+                        val = self.evaluate(self.playTurn, child_state)
+                        ret_state = child_state
+                        is_pruned = False
+                        #print the state
+                        #str_arr = str(method.get_node_name(play_turn, pit_id)) + ',' + str(next_depth) + ',' + str(val) + '\n'
+                        str_arr = str(method.get_node_name(play_turn, pit_id)) + ',' + str(next_depth) + ',' + str(val) + ',' + str(method.print_alphabeta(alpha)) + ',' + str(method.print_alphabeta(beta)) + '\n'
+                        self.tlfobj.write(str_arr)
+                    else:
+                        val, ret_state, is_pruned = self.nxtABMv(method.get_node_name(play_turn, pit_id), child_state, method.alternate_type(nodeType),\
                                 next_depth, child_valid_pits_list, next_play_turn, alpha, beta)
                     
                     if nodeType == param.MAX_NODE:
@@ -479,11 +539,11 @@ class Game:
                             # buts it is not a freeturn so update beta
                             if alpha < val:
                                 alpha = val
+                                global_ret_state = ret_state
                         else:
                             if beta > val:
-                                beta = val
-                                                 
-                        gloabal_ret_state = ret_state
+                                beta = val                     
+                                global_ret_state = ret_state
                     #print nodeName, ',', current_depth, ',', method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn)), ',',method.print_alphabeta(alpha),',', method.print_alphabeta(beta)
                     str_arr = str(nodeName) + ',' + str(current_depth) + ',' + str(method.print_alphabeta(method.get_eval(nodeType, alpha, beta, currentState.freeTurn))) + ',' + str(method.print_alphabeta(alpha)) + ',' + str(method.print_alphabeta(beta)) + '\n'
                     self.tlfobj.write(str_arr)

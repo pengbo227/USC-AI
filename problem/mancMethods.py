@@ -83,7 +83,7 @@ def write_entry_log(fobj, method, nodeName, nodeType, max_depth, current_depth, 
         str_arr = str(nodeName) + ',' + str(current_depth) + ',' + str(eval_val) + ',' + str(print_alphabeta(alpha)) + ',' + str(print_alphabeta(beta)) + '\n'
     elif method == param.TASK_OPTION['MINIMAX']:
         str_arr = str(nodeName) + ',' + str(current_depth) + ',' + str(eval_val) + '\n'
-
+        #print str_arr
     #print 'nodeName', nodeName, 'current_depth', current_depth, 'eval_val', eval_val
     fobj.write(str_arr)
 
