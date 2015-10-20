@@ -60,7 +60,7 @@ class Game:
     def play(self):
         stateObj = self.call_method(self.currentState, self.playTurn)
         #print '\nnew state selected\n'
-        stateObj.print_info()
+        #stateObj.print_info()
         #print output state
         self.__write_state(stateObj)
         
@@ -146,7 +146,7 @@ class Game:
             
             
         if free_turn and self.method ==  param.TASK_OPTION['GREEDY'] and (not is_empty):
-            print 'free turn'
+            #print 'free turn'
             #pseudoState.print_info()
             pseudoState = self.call_method(pseudoState, play_turn)
             #print 'state after free turn'
@@ -189,12 +189,12 @@ class Game:
         next_pstate = {}
         #get only valid moves
         for pit_id in valid_pits_list:
-            print 'greedy pit_id:', pit_id
+            #print 'greedy pit_id:', pit_id
             next_pstate[pit_id] = self.nextState(stateObj, self.playTurn, pit_id)
-        print '\noriginal state before evaluating'
-        stateObj.print_info()
+        #print '\noriginal state before evaluating'
+        #stateObj.print_info()
         pit_id = self.batch_evaluate(next_pstate)
-        print 'pit selcted by greedy',pit_id
+        #print 'pit selcted by greedy',pit_id
         #next_pstate[pit_id].print_info()
         return next_pstate[pit_id] 
     
@@ -207,8 +207,8 @@ class Game:
         max_val = 0
         max_pid = 0
         for key in keyList:
-            print '\nbatch evaluating key:',key
-            stateList[key].print_info()
+            #print '\nbatch evaluating key:',key
+            #stateList[key].print_info()
             score = self.evaluate(self.playTurn, stateList[key])
             if score > max_val:
                 max_val = score
@@ -233,6 +233,7 @@ class Game:
         currentState.depth = current_depth
         eval_val = self.evaluate(self.playTurn, currentState)
         ret_val = eval_val
+
         ret_state = currentState
         method.write_entry_log(self.tlfobj, param.TASK_OPTION['MINIMAX'], nodeName, nodeType, self.maxDepth, current_depth, currentState.freeTurn, eval_val, alpha=None, beta=None)
         if current_depth == self.maxDepth:
@@ -261,7 +262,7 @@ class Game:
                     str_arr = str(nodeName) + ',' + str(current_depth) +','+ str(method.return_opposite_type(nodeType, returnValList)) + '\n'
                     #print str_arr
                     self.tlfobj.write(str_arr)
-
+                
                 ret_val = method.return_opposite_type(nodeType, returnValList)
                 idx = returnValList.index(ret_val) 
                 if (returnStateList[idx].depth > currentState.depth) and currentState.depth!=0:
@@ -339,7 +340,7 @@ class Game:
                     returnValList.append(val)
                     returnStateList.append(ret_state)
                     str_arr = str(nodeName) + ',' + str(current_depth) +','+ str(method.return_same_type(nodeType, returnValList)) + '\n'
-                    print str_arr
+                    #print str_arr
                     self.tlfobj.write(str_arr)
 
                 ret_val = method.return_same_type(nodeType, returnValList)
