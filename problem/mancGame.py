@@ -233,18 +233,18 @@ class Game:
         currentState.depth = current_depth
         eval_val = self.evaluate(self.playTurn, currentState)
         ret_val = eval_val
-
         ret_state = currentState
-        method.write_entry_log(self.tlfobj, param.TASK_OPTION['MINIMAX'], nodeName, nodeType, self.maxDepth, current_depth, currentState.freeTurn, eval_val, alpha=None, beta=None)
+        game_end = False
+        if not valid_pits_list:
+            game_end = True
+
+        method.write_entry_log(self.tlfobj, param.TASK_OPTION['MINIMAX'], nodeName, nodeType, self.maxDepth, current_depth, currentState.freeTurn, eval_val, alpha=None, beta=None, game_end = game_end)
+        if not valid_pits_list:
+            return eval_val, currentState
         if current_depth == self.maxDepth:
-            # as lst depth evaluate and print
-            #print nodeName, ',', current_depth, ',', eval_val
             if not currentState.freeTurn:
                 return eval_val, currentState
             else:
-                #if current state is free turn the return opposite value than its nodetype
-                #what to do if terminating node extends
-                # go through the valid pits list and call minimax
                 for pit_id in valid_pits_list:
                     child_state = self.nextState(currentState, play_turn, pit_id)
                     child_valid_pits_list = []
@@ -253,6 +253,7 @@ class Game:
                         #calculate the valid_pits_list for the child
                         child_valid_pits_list = child_state.players[play_turn].get_valid_list()
                         #if game reaches end then just update the return. Its automatically handled for current_depth == max_depth
+
                     val, ret_state = self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), \
                         child_state, nodeType, next_depth, child_valid_pits_list, play_turn)
                     returnValList.append(val)
@@ -262,7 +263,10 @@ class Game:
                     str_arr = str(nodeName) + ',' + str(current_depth) +','+ str(method.return_opposite_type(nodeType, returnValList)) + '\n'
                     #print str_arr
                     self.tlfobj.write(str_arr)
-                
+
+                #if not returnValList:
+                #    returnValList.append(ret_val)
+                #    returnStateList.append(currentState)
                 ret_val = method.return_opposite_type(nodeType, returnValList)
                 idx = returnValList.index(ret_val) 
                 if (returnStateList[idx].depth > currentState.depth) and currentState.depth!=0:
@@ -290,15 +294,20 @@ class Game:
                         child_valid_pits_list = child_state.players[opponent_turn].get_valid_list()
                         next_play_turn = opponent_turn
 
+                    val, ret_state = self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, next_node_type,\
+                                next_depth, child_valid_pits_list, next_play_turn)
+
                     if not child_valid_pits_list:
                         val = self.evaluate(self.playTurn, child_state)
                         ret_state = child_state
                         #print the state
                         str_arr = str(method.get_node_name(play_turn, pit_id)) + ',' + str(next_depth) + ',' + str(val) + '\n'
+                        #self.tlfobj.write('freeturn\n')
+                        #method.write_entry_log(self.tlfobj, param.TASK_OPTION['MINIMAX'], nodeName, nodeType, self.maxDepth, current_depth, currentState.freeTurn, eval_val, alpha=None, beta=None)
                         self.tlfobj.write(str_arr)
-                    else:    
-                        val, ret_state = self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, next_node_type,\
-                                next_depth, child_valid_pits_list, next_play_turn)
+                    #else:    
+                        # val, ret_state = self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), child_state, next_node_type,\
+                        #         next_depth, child_valid_pits_list, next_play_turn)
                     returnValList.append(val)
                     returnStateList.append(ret_state)
                     str_arr = str(nodeName) + ',' + str(current_depth) +','+ str(method.return_opposite_type(nodeType, returnValList)) + '\n'
@@ -332,6 +341,7 @@ class Game:
                         val = self.evaluate(self.playTurn, child_state)
                         ret_state = child_state
                         #print the state
+                        #print 'check'
                         str_arr = str(method.get_node_name(play_turn, pit_id)) + ',' + str(next_depth) + ',' + str(val) + '\n'
                         self.tlfobj.write(str_arr)
                     else:
