@@ -227,7 +227,7 @@ class Game:
                 #'play_turn',play_turn
     
     def nxtMnmxMv(self, nodeName, currentState, nodeType, current_depth, valid_pits_list, play_turn):
-        print nodeName, currentState.print_info()
+        #print nodeName, currentState.print_info()
         returnValList = []
         returnStateList = []
         currentState.depth = current_depth
@@ -238,7 +238,7 @@ class Game:
         if not valid_pits_list:
             game_end = True
             #self.tlfobj.write('endgame\n')
-        '''
+        '''        
         if current_depth ==self.maxDepth and currentState.freeTurn:
             self.tlfobj.write('last depth and freeturn\n')
         elif current_depth==self.maxDepth and not currentState.freeTurn:
@@ -247,7 +247,7 @@ class Game:
             self.tlfobj.write('intr depth and freeturn\n')
         elif current_depth<self.maxDepth and not currentState.freeTurn:
             self.tlfobj.write('intr depth and not freeturn\n')
-        '''
+        '''        
         method.write_entry_log(self.tlfobj, param.TASK_OPTION['MINIMAX'], nodeName, nodeType, self.maxDepth, current_depth, currentState.freeTurn, eval_val, alpha=None, beta=None, game_end = game_end)
         if not valid_pits_list:
             #self.tlfobj.write('gameend\n')
@@ -260,13 +260,21 @@ class Game:
                     child_state = self.nextState(currentState, play_turn, pit_id)
                     child_valid_pits_list = []
                     next_depth = current_depth
-                    if child_state.freeTurn:
+                    #if child_state.freeTurn:
                         #calculate the valid_pits_list for the child
-                        child_valid_pits_list = child_state.players[play_turn].get_valid_list()
-                        #if game reaches end then just update the return. Its automatically handled for current_depth == max_depth
-
+                    child_valid_pits_list = child_state.players[play_turn].get_valid_list()
                     val, ret_state = self.nxtMnmxMv(method.get_node_name(play_turn, pit_id), \
                         child_state, nodeType, next_depth, child_valid_pits_list, play_turn)
+
+                    if not child_valid_pits_list:
+                        val = self.evaluate(self.playTurn, child_state)
+                        ret_state = child_state
+                        #print the state
+                        str_arr = str(method.get_node_name(play_turn, pit_id)) + ',' + str(next_depth) + ',' + str(val) + '\n'
+                        #self.tlfobj.write('freeturn\n')
+                        #method.write_entry_log(self.tlfobj, param.TASK_OPTION['MINIMAX'], nodeName, nodeType, self.maxDepth, current_depth, currentState.freeTurn, eval_val, alpha=None, beta=None)
+                        self.tlfobj.write(str_arr)
+                    
                     returnValList.append(val)
                     returnStateList.append(ret_state)
                     #print nodeName, ',',current_depth, ',', method.return_opposite_type(nodeType, returnValList)
