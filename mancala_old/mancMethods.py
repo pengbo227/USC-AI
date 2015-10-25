@@ -76,11 +76,11 @@ def intermediate_value(nodeType, isFreeturn):
     return val
 
 def write_entry_log(fobj, method, nodeName, nodeType, max_depth, current_depth, isFreeturn, eval_val=None, alpha=None, beta=None, game_end=False):
-    if game_end and current_depth==max_depth:
+    if game_end and current_depth==max_depth and not isFreeturn:
         return
     if (current_depth<max_depth):
         eval_val = intermediate_value(nodeType, isFreeturn)
-    elif current_depth==max_depth and isFreeturn and not game_end:
+    elif current_depth==max_depth and isFreeturn:
         eval_val = intermediate_value(nodeType, isFreeturn)
 
 
