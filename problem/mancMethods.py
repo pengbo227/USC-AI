@@ -76,11 +76,17 @@ def intermediate_value(nodeType, isFreeturn):
     return val
 
 def write_entry_log(fobj, method, nodeName, nodeType, max_depth, current_depth, isFreeturn, eval_val=None, alpha=None, beta=None, game_end=False):
-    if current_depth<max_depth:
+    if game_end and current_depth==max_depth and not isFreeturn:
+        return
+    if (current_depth<max_depth):
         eval_val = intermediate_value(nodeType, isFreeturn)
-    if current_depth==max_depth and isFreeturn and not game_end:
+    elif current_depth==max_depth and isFreeturn:
         eval_val = intermediate_value(nodeType, isFreeturn)
 
+
+    # if current_depth == max_depth and game_end and not isFreeturn:
+    #     fobj.write('continuing\n')
+    #     return
     #if not ((max_depth == current_depth) and (not isFreeturn)):
     #    eval_val = intermediate_value(nodeType, isFreeturn)
 
@@ -92,5 +98,9 @@ def write_entry_log(fobj, method, nodeName, nodeType, max_depth, current_depth, 
     #print 'nodeName', nodeName, 'current_depth', current_depth, 'eval_val', eval_val
     fobj.write(str_arr)
 
-            
-            
+'''            
+what to do on??
+1. Endgame, lastdepth, freeturn  -->Do we need to print infinity or evaluate it 2 times
+2. Endgame, lastdepth not freeturn
+3. Endgame not lastdepth freeturn
+4. Endgame not lastdepth not freeturn '''          
