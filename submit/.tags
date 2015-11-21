@@ -1,0 +1,84 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+Compare	.\compare.py	/^class Compare:$/;"	c
+Driver	.\mancala.py	/^class Driver:$/;"	c
+Game	.\mancGame.py	/^class Game:$/;"	c
+GamePlayer	.\mancGame.py	/^class GamePlayer:$/;"	c
+GameState	.\mancGame.py	/^class GameState:$/;"	c
+MAX_NODE	.\mancParam.py	/^MAX_NODE = 1$/;"	v
+MINUS_INFINITY	.\mancParam.py	/^MINUS_INFINITY = -10000000$/;"	v
+MINUS_INFINITY_STRING	.\mancParam.py	/^MINUS_INFINITY_STRING = '-Infinity'$/;"	v
+MIN_NODE	.\mancParam.py	/^MIN_NODE = 2$/;"	v
+NEXT_STATE_FILE_NAME	.\mancParam.py	/^NEXT_STATE_FILE_NAME = 'next_state.txt'$/;"	v
+NODE_TYPE_STR	.\mancParam.py	/^NODE_TYPE_STR = {$/;"	v
+NOT_PRUNED	.\mancParam.py	/^NOT_PRUNED = 0$/;"	v
+OptionParser	.\compare.py	/^from optparse import OptionParser$/;"	i
+OptionParser	.\mancala.py	/^from optparse import OptionParser$/;"	i
+PLAYER_ID1	.\mancParam.py	/^PLAYER_ID1 = 1$/;"	v
+PLAYER_ID2	.\mancParam.py	/^PLAYER_ID2 = 2$/;"	v
+PLAYER_LABEL	.\mancParam.py	/^PLAYER_LABEL = {$/;"	v
+PLAYER_LIST	.\mancParam.py	/^PLAYER_LIST = [PLAYER_ID1, PLAYER_ID2]$/;"	v
+PLUS_INFINITY	.\mancParam.py	/^PLUS_INFINITY = 10000000$/;"	v
+PLUS_INFINITY_STRING	.\mancParam.py	/^PLUS_INFINITY_STRING = 'Infinity'$/;"	v
+PRUNED	.\mancParam.py	/^PRUNED = 1$/;"	v
+TASK_OPTION	.\mancParam.py	/^TASK_OPTION = {$/;"	v
+TRAVERSE_LOG_NAME	.\mancParam.py	/^TRAVERSE_LOG_NAME = 'traverse_log.txt'$/;"	v
+TRAV_ALPHABETA_TITLE	.\mancParam.py	/^TRAV_ALPHABETA_TITLE = 'Node,Depth,Value,Alpha,Beta\\n'$/;"	v
+TRAV_MINIMAX_TITLE	.\mancParam.py	/^TRAV_MINIMAX_TITLE = 'Node,Depth,Value\\n'$/;"	v
+__check_board_empty	.\mancGame.py	/^    def __check_board_empty(self, pl_list, pl_score):$/;"	m	class:Game	file:
+__close_files	.\mancGame.py	/^    def __close_files(self):$/;"	m	class:Game	file:
+__create_fobj	.\mancGame.py	/^    def __create_fobj(self):$/;"	m	class:Game	file:
+__getObjNum	.\mancala.py	/^    def __getObjNum(self):$/;"	m	class:Driver	file:
+__getPitsDetails	.\mancala.py	/^    def __getPitsDetails(self):$/;"	m	class:Driver	file:
+__init__	.\compare.py	/^    def __init__(self, source, target):$/;"	m	class:Compare
+__init__	.\mancGame.py	/^    def __init__(self, id, pitsList, score):$/;"	m	class:GamePlayer
+__init__	.\mancGame.py	/^    def __init__(self, players):$/;"	m	class:GameState
+__init__	.\mancGame.py	/^    def __init__(self, state, method, player_turn, depth, totalPits):$/;"	m	class:Game
+__init__	.\mancala.py	/^    def __init__(self, inputFile):$/;"	m	class:Driver
+__output_pits_state	.\mancGame.py	/^    def __output_pits_state(self, state, playerId):$/;"	m	class:Game	file:
+__output_score	.\mancGame.py	/^    def __output_score(self, state, playerId):$/;"	m	class:Game	file:
+__write_state	.\mancGame.py	/^    def __write_state(self, stateObj):$/;"	m	class:Game	file:
+__write_title	.\mancGame.py	/^    def __write_title(self):$/;"	m	class:Game	file:
+alternate_type	.\mancMethods.py	/^def alternate_type(nodeType):$/;"	f
+batch_evaluate	.\mancGame.py	/^    def batch_evaluate(self, stateList):$/;"	m	class:Game
+call_method	.\mancGame.py	/^    def call_method(self, stateObj, play_turn, nodeName=None):$/;"	m	class:Game
+copy	.\mancGame.py	/^import copy$/;"	i
+distribute	.\mancGame.py	/^    def distribute(self, pseudoState, play_turn, pitid):$/;"	m	class:Game
+dobj	.\compare.py	/^    dobj = Compare(options.source, options.target)$/;"	v	class:Compare
+dobj	.\mancala.py	/^    dobj = Driver(options.input)$/;"	v	class:Driver
+evaluate	.\mancGame.py	/^    def evaluate(self, plyId, pseudoStateObj):$/;"	m	class:Game
+game	.\mancala.py	/^import mancGame as game$/;"	i
+get_eval	.\mancMethods.py	/^def get_eval(nodeType, alpha, beta, isFreeturn):$/;"	f
+get_node_name	.\mancMethods.py	/^def get_node_name(playerId, pit_id):$/;"	f
+get_opponent_id	.\mancMethods.py	/^def get_opponent_id(playId):$/;"	f
+get_pits_valid_state	.\mancGame.py	/^    def get_pits_valid_state(self, stateObj, play_turn):$/;"	m	class:Game
+get_valid_list	.\mancGame.py	/^    def get_valid_list(self):$/;"	m	class:GamePlayer
+hasValidMoves	.\mancGame.py	/^    def hasValidMoves(self):$/;"	m	class:GamePlayer
+intermediate_value	.\mancMethods.py	/^def intermediate_value(nodeType, isFreeturn):$/;"	f
+match_files	.\compare.py	/^    def match_files(self):$/;"	m	class:Compare
+method	.\mancGame.py	/^import mancMethods as method$/;"	i
+nextState	.\mancGame.py	/^    def nextState(self, stateObj, play_turn, pitid):    $/;"	m	class:Game
+nxtABMv	.\mancGame.py	/^    def nxtABMv(self, nodeName, currentState, nodeType, current_depth, valid_pits_list, play_turn, alpha, beta):$/;"	m	class:Game
+nxtGreedyMv	.\mancGame.py	/^    def nxtGreedyMv(self, stateObj, valid_pits_list):$/;"	m	class:Game
+nxtMnmxMv	.\mancGame.py	/^    def nxtMnmxMv(self, nodeName, currentState, nodeType, current_depth, valid_pits_list, play_turn):$/;"	m	class:Game
+os	.\mancGame.py	/^import os$/;"	i
+param	.\mancGame.py	/^import mancParam as param$/;"	i
+param	.\mancMethods.py	/^import mancParam as param$/;"	i
+param	.\mancala.py	/^import mancParam as param$/;"	i
+parser	.\compare.py	/^    parser = OptionParser()$/;"	v	class:Compare
+parser	.\mancala.py	/^    parser = OptionParser()$/;"	v	class:Driver
+play	.\mancGame.py	/^    def play(self):$/;"	m	class:Game
+print_alphabeta	.\mancMethods.py	/^def print_alphabeta(value):$/;"	f
+print_info	.\mancGame.py	/^    def print_info(self):$/;"	m	class:GamePlayer
+print_info	.\mancGame.py	/^    def print_info(self):$/;"	m	class:GameState
+print_state	.\mancGame.py	/^    def print_state(self):$/;"	m	class:Game
+return_opposite_type	.\mancMethods.py	/^def return_opposite_type(nodeType, return_list):$/;"	f
+return_same_type	.\mancMethods.py	/^def return_same_type(nodeType, return_list):$/;"	f
+run	.\mancala.py	/^    def run(self):$/;"	m	class:Driver
+should_prune	.\mancMethods.py	/^def should_prune(alpha, beta):$/;"	f
+write_entry_log	.\mancMethods.py	/^def write_entry_log(fobj, method, nodeName, nodeType, max_depth, current_depth, isFreeturn, eval_val=None, alpha=None, beta=None, game_end=False):$/;"	f
+write_title	.\mancMethods.py	/^def write_title(fobj, title):$/;"	f

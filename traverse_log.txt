@@ -1,0 +1,5 @@
+Node,Depth,Value
+root,0,-Infinity
+B3,1,Infinity
+B3,1,-1
+root,0,-1
