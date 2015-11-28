@@ -1,6 +1,7 @@
 import string
 import inferParam as param
 import inferRule as Rule
+import copy
 
 def isFact(rule):
     if rule.type == param.RULE_TYPE['FACT']:
@@ -73,10 +74,9 @@ def Clone_pobj(pobj, replaceMap):
     newObj = Rule.Predicate()
     newObj.name = pobj.name
     newObj.type = pobj.type
-    newObj.argsList = replaceArgs(pobj.argsList, replaceMap)
+    newObj.argsList = ReplaceArgs(pobj.argsList, replaceMap)
     newObj.argsCount = pobj.argsCount
-    self.result = False
-    for obj in pobjs.premiseObjs:
+    for obj in pobj.premiseObjs:
         newObj.premiseObjs.append(Clone_pobj(obj, replaceMap))
     return newObj
 

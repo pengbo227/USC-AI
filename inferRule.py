@@ -10,7 +10,6 @@ class Predicate:
         self.argsCount = None
         self.premiseObjs = []
         self.premiseCount = 0
-        self.result = False
 
     def printPredicate(self):
         i = 1
@@ -27,17 +26,21 @@ class Query:
         self.pobj = util.get_pred_object(rule, param.PREDICATE_TYPE['QUERY'])
 
     def infer(self):
+        '''
+            Valid: TRUE
+            Invalid: FALSE
+        '''
+
         theta = {}
-        theta['_status'] = True
+        print 'infer called'
+        theta['_status'] = param.VALID_RULE
         theta_list = FOL_BC_OR(self.pobj, theta)
-        result = 'FALSE'
+        print 'theta list:',theta_list
+        result = param.INVALID_RULE
         for t in theta_list:
-            if t['_status']:
-                return 'TRUE'
-        return 'FALSE'
-
-
-
+            if t['_status']==param.VALID_RULE:
+                return 'TRUE\n'
+        return 'FALSE\n'
 
 def FOL_BC_OR(pobj, theta):
     '''
@@ -50,17 +53,82 @@ def FOL_BC_OR(pobj, theta):
         the result of getting from inner and call
     '''
     #1 Get the rule list
-    ruleList = Search_rule(pobj.name)
+    ruleList = Search_Rule(pobj.name)
     returnList = []
     for rule in ruleList:
+        print 'rule',rule.printPredicate()
+        print 'theta',theta
         inner_theta = copy.deepcopy(theta)
         #standardize theta
         rule, inner_theta = Standardize(rule, inner_theta)
         #unify will modify inner_theta
-        Unify(rule, pobj, inner_theta)
-        return_list.extend(FOL_BC_AND( None, None, inner_theta))
         
+        returnList.extend(FOL_BC_AND(rule.premiseObjs, Unify(rule.argsList, pobj.argsList, inner_theta)))
+    print 'returnList',returnList
     return returnList
+
+def FOL_BC_AND(goals, theta):
+    '''
+
+    '''
+    print 'And called theta:',theta
+    print 'And Goals', goals
+    if theta['_status']==param.INVALID_RULE:
+        return []
+    elif len(goals)==0:
+        print 'len goals 0'
+        return [theta]
+    first, rest = goals[0], goals[1:]
+    print 'first object before substitution',first.printPredicate()
+    Substitute(first, theta)
+    print 'first object after substitution',first.printPredicate()
+    theta_d = FOL_BC_OR(first, theta)
+    print 'theta d',theta_d
+    resultList = []
+    for t in theta_d:
+        print 't',t
+        resultList.extend(FOL_BC_AND(rest, t))
+    return resultList
+
+
+def Substitute(pobj, theta):
+    for i in range(len(pobj.argsList)):
+        if pobj.argsList[i][0].islower():
+            pobj.argsList[i] = theta[pobj.argsList[i]]
+
+def Unify(rhs, goal, theta):
+    print 'rhs:',rhs
+    print 'goal',goal
+    print 'theta', theta
+    if theta['_status']==param.INVALID_RULE:
+        return theta
+    elif len(goal)==1:
+        print 'length 1 '
+        if rhs[0]==goal[0]:
+            return theta
+        elif rhs[0][0].islower():  #rhs[0] is variable case 1
+            return Unify_Var(rhs[0], goal[0], theta)
+        elif goal[0][0].islower(): #goal[0] is variable and rhs[0] is constant case 2
+            return Unify_Var(goal[0], rhs[0], theta)
+        else:
+            theta['_status'] = param.INVALID_RULE
+            return theta
+    else:
+        return Unify(rhs[1:], goal[1:], Unify(rhs[0], goal[0], theta))
+
+def Unify_Var(var, prob_const, theta):
+    '''
+        in case 1: prob_const can be variable or constant
+        in case 2: prob_const is always constant
+    '''
+    if (var in theta.keys()) and theta[var]:
+
+        return Unify(theta[var], prob_const, theta)
+    elif (prob_const in theta.keys()) and theta[prob_const]:
+        return Unify(var, theta[prob_const], theta)
+    else:
+        theta[var] = prob_const
+        return theta
 
 
 def Standardize(pobj, theta):
@@ -73,87 +141,32 @@ def Standardize(pobj, theta):
         else:
             just add all the variables of pobj to inner_theta.
     '''
-
     if pobj.type==param.PREDICATE_TYPE['FACT']:
         return pobj, theta
     else:
         replaceMap = {}
-        for i in range(pobj.argsCount):
-            origvar = pobj.argsList[i]
-            if origvar in theta:
-                unique = False
+        chkList = [pobj]
+        for elem in pobj.premiseObjs:
+            chkList.append(elem)
+        for elem in chkList:
+            for i in range(elem.argsCount):
+                origvar = elem.argsList[i]
                 var = origvar
-                while not unique:
-                    var = util.get_new_name(var)
-                    unique = var not in theta
-            #add var to theta
-            theta[var] = None
-            #update new_arglist
-            replaceMap[origvar] = var
+                if origvar in theta and theta[origvar]:
+                    unique = False
+                    while not unique:
+                        var = util.get_new_name(var)
+                        unique = var not in theta
+                #add var to theta
+                theta[var] = None
+                #update new_arglist
+                replaceMap[origvar] = var
 
-        #if there is a conflict then create a new pobj
-        pobj_c = pobj   
-        if replaceMap:
-            pobj_c = util.Clone_pobj(pobj, replaceMap)
+        pobj_c = util.Clone_pobj(pobj, replaceMap)
         return pobj_c, theta
-
-
-def FOL_BC_AND( a,b , theta):
-    if theta is None:
-        return None
-
-    #if length of premise is 0 then return true
-
 
 def Search_Rule(name):
     ruleList = []
     ruleList.extend(util.get_kb_list(param.PREDICATE_TYPE['FACT'], name))
     ruleList.extend(util.get_kb_list(param.PREDICATE_TYPE['CC'], name))
     return ruleList
-
-def Standardize(argList, argCnt, theta):
-    #cloning the argList as it will be referenced for fruther queries
-    args = copy.deepcopy(argList)
-
-    #will check if there exists identical variables in argList.
-    #if duplicate variables found in argList then rename that variable
-    base_repr = param.ARGS_BASE_STR
-    for i in range(argCnt):
-        arg = base_repr+str(i)
-        if args[arg] in theta:
-            unique = False
-            while not unique:
-                new_name = util.get_new_name(args[arg])
-                unique = new_name in theta
-            theta[new_name] = None
-        else:
-            theta[args[arg]] = None
-    return theta
-
-def Unify(rhs, goal, theta):
-    if theta is None:
-        return None
-    elif len(goal)==1:
-        if rhs[0]==goal[0]:
-            return theta
-        elif rhs[0][0].islower():  #rhs[0] is variable case 1
-            return Unify_Var(rhs[0], goal[0], theta)
-        elif goal[0][0].islower(): #goal[0] is variable and rhs[0] is constant case 2
-            return Unify_Var(goal[0], rhs[0], theta)
-        else:
-            return None
-    else:
-        return Unify(rhs[1:], goal[1:], Unify(rhs[0], goal[0], theta))
-
-def Unify_Var(var, prob_const, theta):
-    '''
-        in case 1: prob_const can be variable or constant
-        in case 2: prob_const is always constant
-    '''
-    if var in theta.keys():
-        return Unify(theta[var], prob_const, theta)
-    elif prob_const in theta.keys():
-        return Unify(var, theta[prob_const], theta)
-    else:
-        theta[var] = prob_const
-        return theta

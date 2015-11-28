@@ -20,7 +20,16 @@ class Driver:
         self.__getQueries()
         self.kbCount = self.__getCount()
         self.__getKB()
+        self.__inferQueries()
+        self.fout.close()
+        self.fin.close()
         
+
+    def __inferQueries(self):
+        for query in self.queries:
+            q = Rule.Query(query)
+            res = q.infer()
+            self.fout.write(res)
 
     def __getQueries(self):
         self.queries = []
