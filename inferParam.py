@@ -1,7 +1,9 @@
 PREDICATE_TYPE = {
-				'FACT:':1,
+				'FACT':1,
 				'CC':2,
 				'PREMISE':3,
-				'EMPTY':4
-
+				'QUERY':4,
+				'EMPTY':5
 }
+
+ARGS_BASE_STR = 'arg_'
