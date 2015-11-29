@@ -17,7 +17,7 @@ def get_pred_object(pred_repr, ptype):
     pobj.type = ptype
     p_rule = pred_repr.strip()
     p_rule = p_rule.split('(')
-    print 'p_rule',p_rule
+    #print 'p_rule',p_rule
     pobj.name = p_rule[0]
     args = p_rule[1].split(')')[0]
     argsList = args.split(',')

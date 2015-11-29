@@ -9,3 +9,6 @@ C(y,x)=>A(x,y)
 C(x,y)=>B(y,x)
 A(EE,CS)
 B(MS,PHD)
+
+answer: Running into infinite loop
+

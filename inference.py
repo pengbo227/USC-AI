@@ -29,7 +29,7 @@ class Driver:
         for query in self.queries:
             q = Rule.Query(query)
             res = q.infer()
-            print res
+            #print res
             self.fout.write(res)
 
     def __getQueries(self):
