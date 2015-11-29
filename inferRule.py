@@ -3,8 +3,11 @@ import inferUtil as util
 import copy
 
 class Predicate:
+    id=1
     def __init__(self):
         self.name = ''
+        self.pid = Predicate.id
+        Predicate.id = Predicate.id+1
         self.type = None
         self.argsList = None
         self.argsCount = None
@@ -32,17 +35,17 @@ class Query:
         '''
 
         theta = {}
-        print 'infer called'
+        #print 'infer called'
         theta['_status'] = param.VALID_RULE
-        theta_list = FOL_BC_OR(self.pobj, theta)
-        print 'theta list:',theta_list
+        theta_list = FOL_BC_OR(self.pobj, theta, {})
+        #print 'theta list:',theta_list
         result = param.INVALID_RULE
         for t in theta_list:
             if t['_status']==param.VALID_RULE:
                 return 'TRUE\n'
         return 'FALSE\n'
 
-def FOL_BC_OR(pobj, theta):
+def FOL_BC_OR(pobj, theta, ruleids):
     '''
         Input:
         0. pobj: It will be just a single predicate object
@@ -56,54 +59,69 @@ def FOL_BC_OR(pobj, theta):
     ruleList = Search_Rule(pobj.name)
     returnList = []
     for rule in ruleList:
-        print 'rule',rule.printPredicate()
-        print 'theta',theta
+        #print 'rule',rule.#printPredicate()
+        #print 'theta',theta
         inner_theta = copy.deepcopy(theta)
+        inner_ruleids = copy.deepcopy(ruleids)
+        arg_goal = str(pobj.argsList)
+        if rule.pid in inner_ruleids:
+            if arg_goal in inner_ruleids[rule.pid]:
+                continue
+            else:
+                inner_ruleids[rule.pid].append(arg_goal)    
+        else:
+            inner_ruleids[rule.pid] = [arg_goal]
         #standardize theta
+        #print 'inner-theta before std:', inner_theta
         rule, inner_theta = Standardize(rule, inner_theta)
+        #print 'inner-theta after std:', inner_theta
+        #print 'Rule after std:',rule.#printPredicate()
         #unify will modify inner_theta
         
-        returnList.extend(FOL_BC_AND(rule.premiseObjs, Unify(rule.argsList, pobj.argsList, inner_theta)))
-    print 'returnList',returnList
+        returnList.extend(FOL_BC_AND(rule.premiseObjs, Unify(rule.argsList, pobj.argsList, inner_theta), inner_ruleids))
+        #print 'Return list after selecting rule:', rule.#printPredicate(), ' List: ',returnList
+    #print 'returnList',returnList
     return returnList
 
-def FOL_BC_AND(goals, theta):
+def FOL_BC_AND(goals, theta, ruleids):
     '''
 
     '''
-    print 'And called theta:',theta
-    print 'And Goals', goals
+    #print 'And called theta:',theta
+    #print 'And Goals', goals
     if theta['_status']==param.INVALID_RULE:
         return []
     elif len(goals)==0:
-        print 'len goals 0'
+        #print 'len goals 0'
         return [theta]
     first, rest = goals[0], goals[1:]
-    print 'first object before substitution',first.printPredicate()
-    Substitute(first, theta)
-    print 'first object after substitution',first.printPredicate()
-    theta_d = FOL_BC_OR(first, theta)
-    print 'theta d',theta_d
+    #print 'first object before substitution',first.#printPredicate()
+    first = Substitute(first, theta)
+    #print 'first object after substitution',first.#printPredicate()
+    theta_d = FOL_BC_OR(first, theta, ruleids)
+    #print 'theta d',theta_d
     resultList = []
     for t in theta_d:
-        print 't',t
-        resultList.extend(FOL_BC_AND(rest, t))
+        #print 't',t
+        resultList.extend(FOL_BC_AND(rest, t, ruleids))
     return resultList
 
 
 def Substitute(pobj, theta):
-    for i in range(len(pobj.argsList)):
-        if pobj.argsList[i][0].islower():
-            pobj.argsList[i] = theta[pobj.argsList[i]]
+    pobj_c = util.Clone_pobj(pobj)
+    for i in range(len(pobj_c.argsList)):
+        if pobj_c.argsList[i][0].islower() and theta[pobj_c.argsList[i]]:
+            pobj_c.argsList[i] = theta[pobj_c.argsList[i]]
+    return pobj_c
 
 def Unify(rhs, goal, theta):
-    print 'rhs:',rhs
-    print 'goal',goal
-    print 'theta', theta
+    #print 'rhs:',rhs
+    #print 'goal',goal
+    #print 'theta', theta
     if theta['_status']==param.INVALID_RULE:
         return theta
     elif len(goal)==1:
-        print 'length 1 '
+        #print 'length 1 '
         if rhs[0]==goal[0]:
             return theta
         elif rhs[0][0].islower():  #rhs[0] is variable case 1
@@ -114,7 +132,9 @@ def Unify(rhs, goal, theta):
             theta['_status'] = param.INVALID_RULE
             return theta
     else:
-        return Unify(rhs[1:], goal[1:], Unify(rhs[0], goal[0], theta))
+        t = Unify([rhs[0]], [goal[0]], theta)
+        #print 'before unify list recursion rhs',rhs[1:],' - goal:',goal[1:]
+        return Unify(rhs[1:], goal[1:], t)
 
 def Unify_Var(var, prob_const, theta):
     '''
@@ -145,28 +165,38 @@ def Standardize(pobj, theta):
         return pobj, theta
     else:
         replaceMap = {}
-        chkList = [pobj]
-        for elem in pobj.premiseObjs:
+        addMap = []
+        pobj_c = util.Clone_pobj(pobj)
+        chkList = [pobj_c]
+        for elem in pobj_c.premiseObjs:
             chkList.append(elem)
         for elem in chkList:
             for i in range(elem.argsCount):
+                if elem.argsList[i][0].isupper():
+                    continue
                 origvar = elem.argsList[i]
                 var = origvar
-                if origvar in theta and theta[origvar]:
+                if origvar in theta:
                     unique = False
                     while not unique:
                         var = util.get_new_name(var)
                         unique = var not in theta
-                #add var to theta
-                theta[var] = None
-                #update new_arglist
-                replaceMap[origvar] = var
 
-        pobj_c = util.Clone_pobj(pobj, replaceMap)
+                    elem.argsList[i] = var
+                    if not var in addMap:
+                        addMap.append(var)
+
+                else:
+                    addMap.append(origvar)
+
+        for newv in addMap:
+            theta[newv] = None
         return pobj_c, theta
 
 def Search_Rule(name):
     ruleList = []
+    #print 'Searching rule with name:',name
     ruleList.extend(util.get_kb_list(param.PREDICATE_TYPE['FACT'], name))
     ruleList.extend(util.get_kb_list(param.PREDICATE_TYPE['CC'], name))
+    #print 'Searched Rules',ruleList
     return ruleList

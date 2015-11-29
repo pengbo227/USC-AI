@@ -29,6 +29,7 @@ class Driver:
         for query in self.queries:
             q = Rule.Query(query)
             res = q.infer()
+            print res
             self.fout.write(res)
 
     def __getQueries(self):
@@ -90,4 +91,4 @@ if __name__=="__main__":
     dobj = Driver(options.input)
     
     dobj.run()
-    dobj.printKB()
+    #dobj.printKB()

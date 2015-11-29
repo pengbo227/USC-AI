@@ -17,10 +17,11 @@ def get_pred_object(pred_repr, ptype):
     pobj.type = ptype
     p_rule = pred_repr.strip()
     p_rule = p_rule.split('(')
-    #print 'p_rule',p_rule
+    print 'p_rule',p_rule
     pobj.name = p_rule[0]
     args = p_rule[1].split(')')[0]
-    pobj.argsList = args.split(',')
+    argsList = args.split(',')
+    pobj.argsList = map(lambda v : v.strip(), argsList)
     pobj.argsCount = len(pobj.argsList)
     
     if (ptype == param.PREDICATE_TYPE['CC']) or (ptype == param.PREDICATE_TYPE['FACT']):
@@ -70,22 +71,23 @@ def get_new_name(name):
     i=1
     return name+str(i)
 
-def Clone_pobj(pobj, replaceMap):
+def Clone_pobj(pobj):
     newObj = Rule.Predicate()
     newObj.name = pobj.name
+    newObj.pid = pobj.id
     newObj.type = pobj.type
-    newObj.argsList = ReplaceArgs(pobj.argsList, replaceMap)
+    newObj.argsList = copy.deepcopy(pobj.argsList)#ReplaceArgs(pobj.argsList, replaceMap)
     newObj.argsCount = pobj.argsCount
+    newObj.premiseCount = pobj.premiseCount
     for obj in pobj.premiseObjs:
-        newObj.premiseObjs.append(Clone_pobj(obj, replaceMap))
+        newObj.premiseObjs.append(Clone_pobj(obj))
     return newObj
 
-def ReplaceArgs(argsList, replaceMap):
-    n_argsList = copy.deepcopy(argsList)
-    for i in range(len(n_argsList)):
-        if n_argsList[i] in replaceMap:
-            n_argsList[i] = replaceMap[n_argsList[i]]
+def ReplaceArg(pobj, orig, new):
+    if orig in pobj.argsList:
+        idx = pobj.argsList.index(orig)
+        pobj.argsList[idx] = new
 
-    return n_argsList
+
 
 
