@@ -66,6 +66,7 @@ def FOL_BC_OR(pobj, theta, ruleids):
         arg_goal = str(pobj.argsList)
         if rule.pid in inner_ruleids:
             if arg_goal in inner_ruleids[rule.pid]:
+                #print 'Loop Detected'
                 continue
             else:
                 inner_ruleids[rule.pid].append(arg_goal)    
@@ -143,9 +144,9 @@ def Unify_Var(var, prob_const, theta):
     '''
     if (var in theta.keys()) and theta[var]:
 
-        return Unify(theta[var], prob_const, theta)
+        return Unify([theta[var]], [prob_const], theta)
     elif (prob_const in theta.keys()) and theta[prob_const]:
-        return Unify(var, theta[prob_const], theta)
+        return Unify([var], [theta[prob_const]], theta)
     else:
         theta[var] = prob_const
         return theta
