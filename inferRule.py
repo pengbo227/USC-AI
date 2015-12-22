@@ -56,7 +56,7 @@ def FOL_BC_OR(pobj, theta, ruleids):
         the result of getting from inner and call
     '''
     #1 Get the rule list
-    ruleList = Search_Rule(pobj.name)
+    ruleList = Search_Rule(pobj.name, pobj.argsCount)
     returnList = []
     for rule in ruleList:
         #print 'rule',rule.#printPredicate()
@@ -194,10 +194,10 @@ def Standardize(pobj, theta):
             theta[newv] = None
         return pobj_c, theta
 
-def Search_Rule(name):
+def Search_Rule(name, argCount):
     ruleList = []
     #print 'Searching rule with name:',name
-    ruleList.extend(util.get_kb_list(param.PREDICATE_TYPE['FACT'], name))
-    ruleList.extend(util.get_kb_list(param.PREDICATE_TYPE['CC'], name))
+    ruleList.extend(util.get_kb_list(param.PREDICATE_TYPE['FACT'], name, argCount))
+    ruleList.extend(util.get_kb_list(param.PREDICATE_TYPE['CC'], name, argCount))
     #print 'Searched Rules',ruleList
     return ruleList

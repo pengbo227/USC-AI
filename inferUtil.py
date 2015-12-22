@@ -36,10 +36,14 @@ def IndexObj(pobj, ptype):
     else:
         idxObj[ptype][pobj.name].append(pobj)
 
-def get_kb_list(ptype, name):
+def get_kb_list(ptype, name, argCount):
     flist = __builtins__['KB'][ptype]
+    item_list = []
     if flist.get(name, None):
-        return flist[name]
+        for obj in flist[name]:
+            if obj.argsCount == argCount:
+                item_list.append(obj)
+        return item_list
     return []
 
 def pop_premise_objList(premise_repr, cobj):
