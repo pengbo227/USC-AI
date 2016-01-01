@@ -1,5 +1,5 @@
 # USC-AI
-It contains academic projects for course **CSCI 561 Artificial Intelligence - prof. Laurent Itti**. All the projects has been implemented in python.
+It contains academic projects for course **CSCI 561 Artificial Intelligence(Fall 2015) - prof. Laurent Itti**. All the projects have been implemented in **python**.
 
 1. **WaterFlow-problem** : It uses the informed and uninformed AI search techniques to solve the waterflow problem.
 
